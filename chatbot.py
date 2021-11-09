@@ -23,7 +23,7 @@ class Chatbot:
         # movie i by user j
         self.titles, ratings = util.load_ratings('data/ratings.txt')
         self.sentiment = util.load_sentiment_dictionary('data/sentiment.txt')
-        self.negations = util.load_negations('data/negations.txt')
+        self.negations = util.load_negations('deps/negations.txt')
         self.minWordLength = 3
         ########################################################################
         # TODO: Binarize the movie ratings matrix.                             #
