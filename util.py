@@ -56,10 +56,4 @@ def load_sentiment_dictionary(src_filename: str, delimiter: str = ',',
         if header:
             next(reader)
         return dict(reader)
-    
-def load_negations(src_filename: str):
-    results = set()
-    with open(src_filename, 'r') as f:
-        for line in f:
-            results.add(line.strip())
-    return results
+

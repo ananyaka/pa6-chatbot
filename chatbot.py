@@ -24,7 +24,7 @@ class Chatbot:
         # movie i by user j
         self.titles, ratings = util.load_ratings('data/ratings.txt')
         self.sentiment = util.load_sentiment_dictionary('data/sentiment.txt')
-        self.negations = util.load_negations('deps/negations.txt')
+        self.negations = self.load_negations('deps/negations.txt')
         self.minWordLength = 3
         ########################################################################
         # TODO: Binarize the movie ratings matrix.                             #
@@ -39,6 +39,13 @@ class Chatbot:
     ############################################################################
     # 1. WARM UP REPL                                                          #
     ############################################################################
+
+    def load_negations(self, src_filename: str):
+        results = set()
+        with open(src_filename, 'r') as f:
+            for line in f:
+                results.add(line.strip())
+        return results
 
     def greeting(self):
         """Return a message that the chatbot uses to greet the user."""
