@@ -47,6 +47,15 @@ What are some possible ramifications of anthropomorphizing chatbot systems? Can 
 engineers could ensure that users can easily distinguish the chatbot responses from those of a human?
 
 
+Response - Anthropomorphizing chatbot systems would mean that humans would not only start believing the system's advice,
+but would also start sharing personal/sensitive information with these chatbots without realizing that what they share
+could possibly be accessed by other people as well. This is a big privacy issue right here.
+In addition to this, when people start believing whatever the system says, they could get emotionally hurt, could do things
+they shouldn't be doing etc. (we have no idea what data these chatbots migt be trained on and the extent of harm they can do with
+their words).
+
+A great way to distinguish chatbot responses from those of a human might be to add specific questions that are programmed to be answered
+by the bot with a specific answer only. Like are you a bot? A bot would always respond yes to this.
 
 #########################################################################################
 # Optional: Feel free to include anything else that you want us to know about your      #
