@@ -27,7 +27,7 @@ Did not implement any of the above features: NO
 #########################################################################################
 # Team Contributions                                                                    #
 #########################################################################################
-TODO: Please write a short description of what each team member contributed!
+Everyone contributed equally.
 
 
 #########################################################################################
