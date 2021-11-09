@@ -5,6 +5,7 @@
 import util
 
 import numpy as np
+import re
 
 
 # noinspection PyMethodMayBeStatic
@@ -192,7 +193,37 @@ class Chatbot:
         :param title: a string containing a movie title
         :returns: a list of indices of matching movies
         """
-        return []
+        matches = []
+        year_pattern = '\s\([0-9]{4}\)$' # check if title contains year at the end. Ex: (2009)
+        year_index = re.search(year_pattern, title)
+
+        # check if year starts with The, A, or An
+
+
+        if year_index: # if the title contains a year
+            if title.startswith("The "): 
+                title = title[4:-7] + ', The' + title[-7]
+            elif title.startswith("A "): 
+                title = title[2:-7] + ', A' + title[-7:]
+            elif title.startswith("An "): 
+                title = title[3:-7] + ', An' + title[-7:]
+            for i in range(len(self.titles)):
+                if title == self.titles[i][0]: 
+                    matches.append(i)
+                    break # for title with a year, there's only 1 match
+
+        else:
+            if title.startswith("The "): 
+                title = title[4:] + ', The' 
+            elif title.startswith("A "): 
+                title = title[2:] + ', A' 
+            elif title.startswith("An "): 
+                title = title[3:] + ', An' 
+            for i in range(len(self.titles)):
+                if title == self.titles[i][0][:-7]:
+                    matches.append(i)
+
+        return matches
 
     def extract_sentiment(self, preprocessed_input):
         """Extract a sentiment rating from a line of pre-processed text.
