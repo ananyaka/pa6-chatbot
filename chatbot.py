@@ -23,7 +23,8 @@ class Chatbot:
         # movie i by user j
         self.titles, ratings = util.load_ratings('data/ratings.txt')
         self.sentiment = util.load_sentiment_dictionary('data/sentiment.txt')
-
+        self.negations = util.load_negations('data/negations.txt')
+        self.minWordLength = 3
         ########################################################################
         # TODO: Binarize the movie ratings matrix.                             #
         ########################################################################
@@ -121,7 +122,11 @@ class Chatbot:
         to use any attributes of Chatbot in this method.
 
         :param text: a user-supplied line of text
-        :returns: the same text, pre-processed
+        :returns: original text
+        dictionary with at most two entries whose keys are the 
+        movies in the text and the values are a list of 'before' strings and
+        'after' strings. 'before' strings are words that come before the movie
+        and 'after' strings come after.
         """
         ########################################################################
         # TODO: Preprocess the text into a desired format.                     #
@@ -133,7 +138,7 @@ class Chatbot:
         ########################################################################
         #                             END OF YOUR CODE                         #
         ########################################################################
-
+        
         return text
 
     def extract_titles(self, preprocessed_input):
@@ -180,6 +185,23 @@ class Chatbot:
         """
         return []
 
+    def extract_edit_distance_words(self, word):
+        for i in range(len(word), self.minWordLength, -1):
+            sub_str = word[0: i]
+            if sub_str in self.sentiment:
+                return sub_str
+        return ""
+
+    def apply_negation(self, sentiment, sentiments):
+        quote = False
+        for word in sentiments:
+            if '"' in word or quote:
+                quote = False if quote else True
+                continue
+            if word in self.negations:
+                return -1 if sentiment == 1 or sentiment == 0 else 1
+        return sentiment
+
     def extract_sentiment(self, preprocessed_input):
         """Extract a sentiment rating from a line of pre-processed text.
 
@@ -200,8 +222,33 @@ class Chatbot:
         pre-processed with preprocess()
         :returns: a numerical value for the sentiment of the text
         """
-        return 0
+        words = preprocessed_input.split()
+        num_pos = 0
+        num_neg = 0
+        quote = False
+        for word in words:
+            if '"' in word or quote:
+                quote = False if quote else True
+                continue
+            if word in self.sentiment:
+                if self.sentiment[word] == "pos":
+                    num_pos += 1
+                else:
+                    num_neg += 1
+            else:
+                p_word = self.extract_edit_distance_words(word)
+                if p_word == "": 
+                    continue
+                if self.sentiment[p_word] == "pos":
+                    num_pos += 1
+                else:
+                    num_neg += 1
+        
+        sentiment = -1 if num_neg >= 1 else 1
+        sentiment = 0 if num_neg == num_pos == 0 else sentiment
 
+        return self.apply_negation(sentiment, words)
+        
     def extract_sentiment_for_movies(self, preprocessed_input):
         """Creative Feature: Extracts the sentiments from a line of
         pre-processed text that may contain multiple movies. Note that the
