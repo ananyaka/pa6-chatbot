@@ -160,7 +160,21 @@ class Chatbot:
         pre-processed with preprocess()
         :returns: list of movie titles that are potentially in the text
         """
-        return []
+        to_ret = []
+        str1 = preprocessed_input
+        temp = str1
+        while(True):
+            str1 = temp
+            a = str1.find('"')
+            if (a == -1):
+                break
+            for i in range(a+1, len(str1)):
+                if (str1[i] == '"'):
+                    b = i 
+                    break
+            to_ret.append(str1[a+1:b])
+            temp = str1[b+1:]
+        return to_ret
 
     def find_movies_by_title(self, title):
         """ Given a movie title, return a list of indices of matching movies.
@@ -340,6 +354,14 @@ class Chatbot:
         # The starter code returns a new matrix shaped like ratings but full of
         # zeros.
         binarized_ratings = np.zeros_like(ratings)
+        for row_idx, row in enumerate(ratings):
+            for col_idx, item in enumerate(row):
+                if ratings[row_idx][col_idx] == 0:
+                    binarized_ratings[row_idx][col_idx] = 0
+                elif ratings[row_idx][col_idx] > threshold:
+                    binarized_ratings[row_idx][col_idx] = 1
+                else:
+                    binarized_ratings[row_idx][col_idx] = -1
 
         ########################################################################
         #                        END OF YOUR CODE                              #
@@ -359,7 +381,7 @@ class Chatbot:
         ########################################################################
         # TODO: Compute cosine similarity between the two vectors.             #
         ########################################################################
-        similarity = 0
+        similarity = np.dot(u,v) / (np.sqrt(np.sum(u**2))*np.sqrt(np.sum(v**2)))
         ########################################################################
         #                          END OF YOUR CODE                            #
         ########################################################################
