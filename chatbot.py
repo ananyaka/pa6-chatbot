@@ -31,7 +31,8 @@ class Chatbot:
         ########################################################################
 
         # Binarize the movie ratings before storing the binarized matrix.
-        self.ratings = ratings
+        #self.ratings = ratings
+        self.ratings = self.binarize(ratings)
         ########################################################################
         #                             END OF YOUR CODE                         #
         ########################################################################
@@ -434,7 +435,7 @@ class Chatbot:
         ########################################################################
         # TODO: Compute cosine similarity between the two vectors.             #
         ########################################################################
-        similarity = np.dot(u,v) / (np.sqrt(np.sum(u**2))*np.sqrt(np.sum(v**2)))
+        similarity = np.dot(u,v) / (np.linalg.norm(u) * np.linalg.norm(v))
         ########################################################################
         #                          END OF YOUR CODE                            #
         ########################################################################
@@ -478,6 +479,47 @@ class Chatbot:
 
         # Populate this list with k movie indices to recommend to the user.
         recommendations = []
+        
+        movie_idx_ratings = {}  #map from key:movie index --> value:rating
+
+        user_rated_indexes = []  # list: gets all indices of users ratings that != 0
+        for idx in range(len(user_ratings)):
+            if user_ratings[idx] != 0:
+                user_rated_indexes.append(idx)
+
+        num_movies = np.asarray(ratings_matrix).shape[0]
+        for i in range(num_movies): #for each movie i in the dataset
+            summed_rating = 0
+            for j, j_idx in enumerate(user_rated_indexes): #loop through list of non-0 indices
+                
+                cosine_sim = 0
+                if (np.linalg.norm(ratings_matrix[i]) * np.linalg.norm(ratings_matrix[j_idx])) != 0:
+                    cosine_sim = self.similarity(ratings_matrix[i], ratings_matrix[j_idx])
+                else: #denominator for cosine similarity would otherwise be 0
+                    cosine_sim = 0
+
+                summed_rating += cosine_sim * user_ratings[j_idx]
+
+            movie_idx_ratings[i] = summed_rating
+
+
+        # sort movie ratings in reverse descending order; lambda -- sort dictionary by values
+        sorted_movie_ratings = dict(sorted(movie_idx_ratings.items(), key=lambda item: item[1], reverse=True))
+        movie_indexes = list(sorted_movie_ratings.keys())
+        
+        user_not_rated_indexes = []
+        for idx in range(len(user_ratings)):
+            if user_ratings[idx] == 0:
+                user_not_rated_indexes.append(idx)
+
+        n = 0
+        movie_idx_increment = 0
+        while n != k:
+            movie_idx = movie_indexes[movie_idx_increment]
+            if movie_idx in user_not_rated_indexes: # if in user_not_rated list
+                recommendations.append(movie_idx)
+                n += 1
+            movie_idx_increment += 1
 
         ########################################################################
         #                        END OF YOUR CODE                              #
