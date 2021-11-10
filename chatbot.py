@@ -324,6 +324,65 @@ class Chatbot:
         title, and the second is the sentiment in the text toward that movie
         """
         pass
+    
+    
+    
+    def get_str_units(self, str):
+        '''
+        Gets a list of string "units", which would be individual characters of the
+        string or a year at the end (eg. (2009)) if applicable.
+        :param str: a string, assume is already lowercase
+        :returns: a list of string "units", either a character or a year 
+        '''
+        units = []
+
+        year_pattern = '\s\([0-9]{4}\)$' # check if title contains year at the end. Ex: (2009)
+        year_index = re.search(year_pattern, str)
+        if year_index:
+            year_index = year_index.start()
+
+        str_len = len(str)
+        str_idx = 0
+        while str_idx < str_len:
+            if str_idx == year_index:
+                # print(year_index)
+                # print(str_idx)
+                str_idx += 7
+                break
+            units.append(str[str_idx])
+            str_idx += 1
+
+        return units
+
+
+    def find_edit_dist(self, source, target):
+        source_units = self.get_str_units(source)
+        target_units = self.get_str_units(target)
+
+        source_length = len(source_units) 
+        target_length = len(target_units)
+
+        dist_matrix = np.zeros((source_length+1, target_length+1))
+
+        for i in range(source_length):
+            dist_matrix[i+1][0] = dist_matrix[i][0] + 1 #add deletion cost
+
+        for j in range(target_length):
+            dist_matrix[0][j+1] = dist_matrix[0][j] + 1 #add insertion cost
+
+        for i in range(source_length):
+            for j in range(target_length):
+                if source[i] != target[j]:
+                    dist_matrix[i+1][j+1] = min(dist_matrix[i][j+1] + 1,
+                                                dist_matrix[i+1][j] + 1,
+                                                dist_matrix[i][j] + 2)
+                else: 
+                    dist_matrix[i+1][j+1] = min(dist_matrix[i][j+1] + 1,
+                                                dist_matrix[i+1][j] + 1,
+                                                dist_matrix[i][j])
+
+        return dist_matrix[source_length][target_length]
+    
 
     def find_movies_closest_to_title(self, title, max_distance=3):
         """Creative Feature: Given a potentially misspelled movie title,
@@ -349,7 +408,44 @@ class Chatbot:
         and within edit distance max_distance
         """
 
-        pass
+                title_size = len(title)
+        title_lowercase = title.lower()
+
+        indices = []
+        map_title_idx = {} # map from movie title (key) --> movie index (value)
+        map_title_dist = {} # map from movie title (key) --> edit distance (value)
+
+        # for all movie titles in dataset, add their edit distance from title
+        for i, source in enumerate((self.titles)):
+            source_lowercase = source[0].lower()
+            source_size = len(source[0])
+
+            edit_dist = self.find_edit_dist(source_lowercase, title_lowercase)
+
+            if edit_dist <= max_distance:
+                map_title_dist[source[0]] = edit_dist
+                map_title_idx[source[0]] = i
+
+        # sort dictionary of title->dist by ascending distance
+        sorted_map = dict(sorted(map_title_dist.items(), key=lambda item: item[1]))
+        titles = list(sorted_map.keys())
+
+        if titles: #if titles list is not empty
+            min_dist = map_title_dist[titles[0]]
+            idx_increment = 0
+            while idx_increment <= len(titles)-1:
+                # add any indices that correspond with the least edit distance from title
+                dist = map_title_dist[titles[idx_increment]]
+
+                if dist == min_dist: 
+                    indices.append(map_title_idx[titles[idx_increment]])
+                else:
+                    break
+                idx_increment += 1
+
+        return indices
+    
+    
 
     def disambiguate(self, clarification, candidates):
         """Creative Feature: Given a list of movies that the user could be
