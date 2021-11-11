@@ -7,8 +7,6 @@ import util
 import numpy as np
 import re
 
-import re
-
 
 # noinspection PyMethodMayBeStatic
 class Chatbot:
@@ -212,13 +210,10 @@ class Chatbot:
         year_pattern = '\s\([0-9]{4}\)$' # check if title contains year at the end. Ex: (2009)
         year_index = re.search(year_pattern, title)
 
+        title_pattern = f"\\b{title}\\b"
+
         # check if year starts with The, A, or An
 
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> 5128f2d298478c72b01d18f29e2faeeae9f9486b
         if year_index: # if the title contains a year
             if title.startswith("The "): 
                 title = title[4:-7] + ', The' + title[-7]
@@ -230,11 +225,6 @@ class Chatbot:
                 if title == self.titles[i][0]: 
                     matches.append(i)
                     break # for title with a year, there's only 1 match
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> 5128f2d298478c72b01d18f29e2faeeae9f9486b
         else:
             if title.startswith("The "): 
                 title = title[4:] + ', The' 
@@ -243,12 +233,10 @@ class Chatbot:
             elif title.startswith("An "): 
                 title = title[3:] + ', An' 
             for i in range(len(self.titles)):
-                if title == self.titles[i][0][:-7]:
+                if title == self.titles[i][0][:-7] or re.search(title_pattern, self.titles[i][0], re.IGNORECASE):
                     matches.append(i)
 
         return matches
-<<<<<<< HEAD
-=======
 
     def extract_edit_distance_words(self, word):
         for i in range(len(word), self.minWordLength, -1):
@@ -266,7 +254,6 @@ class Chatbot:
             if word in self.negations:
                 return -1 if sentiment == 1 or sentiment == 0 else 1
         return sentiment
->>>>>>> 5128f2d298478c72b01d18f29e2faeeae9f9486b
 
     def extract_sentiment(self, preprocessed_input):
         """Extract a sentiment rating from a line of pre-processed text.
