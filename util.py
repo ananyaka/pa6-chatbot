@@ -56,3 +56,4 @@ def load_sentiment_dictionary(src_filename: str, delimiter: str = ',',
         if header:
             next(reader)
         return dict(reader)
+

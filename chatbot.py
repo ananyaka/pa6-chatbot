@@ -5,6 +5,7 @@
 import util
 
 import numpy as np
+import re
 
 import re
 
@@ -25,13 +26,15 @@ class Chatbot:
         # movie i by user j
         self.titles, ratings = util.load_ratings('data/ratings.txt')
         self.sentiment = util.load_sentiment_dictionary('data/sentiment.txt')
-
+        self.negations = self.load_negations('deps/negations.txt')
+        self.minWordLength = 3
         ########################################################################
         # TODO: Binarize the movie ratings matrix.                             #
         ########################################################################
 
         # Binarize the movie ratings before storing the binarized matrix.
-        self.ratings = ratings
+        #self.ratings = ratings
+        self.ratings = self.binarize(ratings)
         ########################################################################
         #                             END OF YOUR CODE                         #
         ########################################################################
@@ -39,6 +42,13 @@ class Chatbot:
     ############################################################################
     # 1. WARM UP REPL                                                          #
     ############################################################################
+
+    def load_negations(self, src_filename: str):
+        results = set()
+        with open(src_filename, 'r') as f:
+            for line in f:
+                results.add(line.strip())
+        return results
 
     def greeting(self):
         """Return a message that the chatbot uses to greet the user."""
@@ -123,7 +133,11 @@ class Chatbot:
         to use any attributes of Chatbot in this method.
 
         :param text: a user-supplied line of text
-        :returns: the same text, pre-processed
+        :returns: original text
+        dictionary with at most two entries whose keys are the 
+        movies in the text and the values are a list of 'before' strings and
+        'after' strings. 'before' strings are words that come before the movie
+        and 'after' strings come after.
         """
         ########################################################################
         # TODO: Preprocess the text into a desired format.                     #
@@ -135,7 +149,7 @@ class Chatbot:
         ########################################################################
         #                             END OF YOUR CODE                         #
         ########################################################################
-
+        
         return text
 
     def extract_titles(self, preprocessed_input):
@@ -200,7 +214,11 @@ class Chatbot:
 
         # check if year starts with The, A, or An
 
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> 5128f2d298478c72b01d18f29e2faeeae9f9486b
         if year_index: # if the title contains a year
             if title.startswith("The "): 
                 title = title[4:-7] + ', The' + title[-7]
@@ -212,7 +230,11 @@ class Chatbot:
                 if title == self.titles[i][0]: 
                     matches.append(i)
                     break # for title with a year, there's only 1 match
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> 5128f2d298478c72b01d18f29e2faeeae9f9486b
         else:
             if title.startswith("The "): 
                 title = title[4:] + ', The' 
@@ -225,6 +247,26 @@ class Chatbot:
                     matches.append(i)
 
         return matches
+<<<<<<< HEAD
+=======
+
+    def extract_edit_distance_words(self, word):
+        for i in range(len(word), self.minWordLength, -1):
+            sub_str = word[0: i]
+            if sub_str in self.sentiment:
+                return sub_str
+        return ""
+
+    def apply_negation(self, sentiment, sentiments):
+        quote = False
+        for word in sentiments:
+            if '"' in word or quote:
+                quote = False if quote else True
+                continue
+            if word in self.negations:
+                return -1 if sentiment == 1 or sentiment == 0 else 1
+        return sentiment
+>>>>>>> 5128f2d298478c72b01d18f29e2faeeae9f9486b
 
     def extract_sentiment(self, preprocessed_input):
         """Extract a sentiment rating from a line of pre-processed text.
@@ -246,8 +288,33 @@ class Chatbot:
         pre-processed with preprocess()
         :returns: a numerical value for the sentiment of the text
         """
-        return 0
+        words = preprocessed_input.split()
+        num_pos = 0
+        num_neg = 0
+        quote = False
+        for word in words:
+            if '"' in word or quote:
+                quote = False if quote else True
+                continue
+            if word in self.sentiment:
+                if self.sentiment[word] == "pos":
+                    num_pos += 1
+                else:
+                    num_neg += 1
+            else:
+                p_word = self.extract_edit_distance_words(word)
+                if p_word == "": 
+                    continue
+                if self.sentiment[p_word] == "pos":
+                    num_pos += 1
+                else:
+                    num_neg += 1
+        
+        sentiment = -1 if num_neg >= 1 else 1
+        sentiment = 0 if num_neg == num_pos == 0 else sentiment
 
+        return self.apply_negation(sentiment, words)
+        
     def extract_sentiment_for_movies(self, preprocessed_input):
         """Creative Feature: Extracts the sentiments from a line of
         pre-processed text that may contain multiple movies. Note that the
@@ -270,6 +337,65 @@ class Chatbot:
         title, and the second is the sentiment in the text toward that movie
         """
         pass
+    
+    
+    
+    def get_str_units(self, str):
+        '''
+        Gets a list of string "units", which would be individual characters of the
+        string or a year at the end (eg. (2009)) if applicable.
+        :param str: a string, assume is already lowercase
+        :returns: a list of string "units", either a character or a year 
+        '''
+        units = []
+
+        year_pattern = '\s\([0-9]{4}\)$' # check if title contains year at the end. Ex: (2009)
+        year_index = re.search(year_pattern, str)
+        if year_index:
+            year_index = year_index.start()
+
+        str_len = len(str)
+        str_idx = 0
+        while str_idx < str_len:
+            if str_idx == year_index:
+                # print(year_index)
+                # print(str_idx)
+                str_idx += 7
+                break
+            units.append(str[str_idx])
+            str_idx += 1
+
+        return units
+
+
+    def find_edit_dist(self, source, target):
+        source_units = self.get_str_units(source)
+        target_units = self.get_str_units(target)
+
+        source_length = len(source_units) 
+        target_length = len(target_units)
+
+        dist_matrix = np.zeros((source_length+1, target_length+1))
+
+        for i in range(source_length):
+            dist_matrix[i+1][0] = dist_matrix[i][0] + 1 #add deletion cost
+
+        for j in range(target_length):
+            dist_matrix[0][j+1] = dist_matrix[0][j] + 1 #add insertion cost
+
+        for i in range(source_length):
+            for j in range(target_length):
+                if source[i] != target[j]:
+                    dist_matrix[i+1][j+1] = min(dist_matrix[i][j+1] + 1,
+                                                dist_matrix[i+1][j] + 1,
+                                                dist_matrix[i][j] + 2)
+                else: 
+                    dist_matrix[i+1][j+1] = min(dist_matrix[i][j+1] + 1,
+                                                dist_matrix[i+1][j] + 1,
+                                                dist_matrix[i][j])
+
+        return dist_matrix[source_length][target_length]
+    
 
     def find_movies_closest_to_title(self, title, max_distance=3):
         """Creative Feature: Given a potentially misspelled movie title,
@@ -295,7 +421,44 @@ class Chatbot:
         and within edit distance max_distance
         """
 
-        pass
+        title_size = len(title)
+        title_lowercase = title.lower()
+
+        indices = []
+        map_title_idx = {} # map from movie title (key) --> movie index (value)
+        map_title_dist = {} # map from movie title (key) --> edit distance (value)
+
+        # for all movie titles in dataset, add their edit distance from title
+        for i, source in enumerate((self.titles)):
+            source_lowercase = source[0].lower()
+            source_size = len(source[0])
+
+            edit_dist = self.find_edit_dist(source_lowercase, title_lowercase)
+
+            if edit_dist <= max_distance:
+                map_title_dist[source[0]] = edit_dist
+                map_title_idx[source[0]] = i
+
+        # sort dictionary of title->dist by ascending distance
+        sorted_map = dict(sorted(map_title_dist.items(), key=lambda item: item[1]))
+        titles = list(sorted_map.keys())
+
+        if titles: #if titles list is not empty
+            min_dist = map_title_dist[titles[0]]
+            idx_increment = 0
+            while idx_increment <= len(titles)-1:
+                # add any indices that correspond with the least edit distance from title
+                dist = map_title_dist[titles[idx_increment]]
+
+                if dist == min_dist: 
+                    indices.append(map_title_idx[titles[idx_increment]])
+                else:
+                    break
+                idx_increment += 1
+
+        return indices
+    
+    
 
     def disambiguate(self, clarification, candidates):
         """Creative Feature: Given a list of movies that the user could be
@@ -320,7 +483,111 @@ class Chatbot:
         :returns: a list of indices corresponding to the movies identified by
         the clarification
         """
-        pass
+        identified_indices = []
+        year_pattern = '\s\([0-9]{4}\)$' # check if title contains year at the end. Ex: (2009)
+        
+        ##### For disambiguate part 2: #####
+        
+        for i in range(len(candidates)):
+            candidate_idx = candidates[i]
+            candidate_title = self.titles[candidate_idx][0]
+            year_found = re.search(year_pattern, candidate_title)
+            title_no_year = candidate_title
+            if year_found:
+                year_index = year_found.start()
+                title_no_year = title_no_year[0:year_index]
+
+            clarification_found = re.search(clarification, title_no_year)
+            if clarification_found:
+                clarification_idx = clarification_found.start()
+                identified_indices.append(candidate_idx)
+
+
+        if not identified_indices and clarification.isnumeric() and len(clarification) == 4:
+            for i in range(len(candidates)):
+                candidate_idx = candidates[i]
+                candidate_title = self.titles[candidate_idx][0]
+                clarification_found_yr = re.search(clarification, candidate_title)
+                if clarification_found_yr:
+                    clarification_idx = clarification_found_yr.start()
+                    identified_indices.append(candidate_idx)
+
+        ##### For disambiguate part 3: #####
+
+        if not identified_indices and clarification.isnumeric():
+            if int(clarification) <= len(candidates):
+                identified_indices.append(candidates[int(clarification)-1])
+
+
+        if not identified_indices and clarification == "most recent":
+            movies_with_years = []
+            for i in range(len(candidates)):
+                candidate_idx = candidates[i]
+                candidate_title = self.titles[candidate_idx][0]
+                year_found = re.search(year_pattern, candidate_title)
+                if year_found:
+                    year_index = year_found.start()
+                    movies_with_years.append(candidate_idx)
+
+            if movies_with_years:
+                first_movie_idx = movies_with_years[0]
+                first_movie_title = self.titles[first_movie_idx][0]
+                recent_year = first_movie_title[len(first_movie_title)-8:len(first_movie_title)-1]
+                recent_idx = []
+                for i, movie_idx in enumerate(movies_with_years):
+                    movie_title = self.titles[movie_idx][0]
+                    movie_year = movie_title[len(movie_title)-8 : len(movie_title)-1]
+
+                    if movie_year == recent_year:
+                        recent_idx.append(movie_idx)
+                    elif movie_year > recent_year:
+                        recent_idx = []
+                        recent_idx.append(movie_idx)
+
+                for i in range(len(recent_idx)):
+                    identified_indices.append(recent_idx[i])
+
+
+        the_one_pattern = '^[tT]he\s(\w+\s)+one$'
+        the_one_found = re.search(the_one_pattern, clarification)
+        if not identified_indices and the_one_found:
+            target = clarification[4:len(clarification)-4]
+
+            for i in range(len(candidates)):
+                candidate_idx = candidates[i]
+                candidate_title = self.titles[candidate_idx][0]
+                clarification_found = re.search(target, candidate_title)
+                if clarification_found:
+                    clarification_idx = clarification_found.start()
+                    identified_indices.append(candidate_idx)
+
+            if not identified_indices and target == "first" and len(candidates) >= 1:
+                identified_indices.append(candidates[0])
+            elif not identified_indices and target == "second" and len(candidates) >= 2:
+                identified_indices.append(candidates[1])
+            elif not identified_indices and target == "third" and len(candidates) >= 3:
+                identified_indices.append(candidates[2])
+            elif not identified_indices and target == "fourth" and len(candidates) >= 4:
+                identified_indices.append(candidates[3])
+            elif not identified_indices and target == "fifth" and len(candidates) >= 5:
+                identified_indices.append(candidates[4])
+            elif not identified_indices and target == "sixth" and len(candidates) >= 6:
+                identified_indices.append(candidates[5])
+            elif not identified_indices and target == "seventh" and len(candidates) >= 7:
+                identified_indices.append(candidates[6])
+            elif not identified_indices and target == "eighth" and len(candidates) >= 8:
+                identified_indices.append(candidates[7])
+            elif not identified_indices and target == "ninth" and len(candidates) >= 9:
+                identified_indices.append(candidates[8])
+            elif not identified_indices and target == "tenth" and len(candidates) >= 10:
+                identified_indices.append(candidates[9])
+
+
+        if not identified_indices: #if there are no matches for the given clarification
+            identified_indices = candidates
+
+        return identified_indices
+    
 
     ############################################################################
     # 3. Movie Recommendation helper functions                                 #
@@ -381,7 +648,7 @@ class Chatbot:
         ########################################################################
         # TODO: Compute cosine similarity between the two vectors.             #
         ########################################################################
-        similarity = np.dot(u,v) / (np.sqrt(np.sum(u**2))*np.sqrt(np.sum(v**2)))
+        similarity = np.dot(u,v) / (np.linalg.norm(u) * np.linalg.norm(v))
         ########################################################################
         #                          END OF YOUR CODE                            #
         ########################################################################
@@ -425,6 +692,47 @@ class Chatbot:
 
         # Populate this list with k movie indices to recommend to the user.
         recommendations = []
+        
+        movie_idx_ratings = {}  #map from key:movie index --> value:rating
+
+        user_rated_indexes = []  # list: gets all indices of users ratings that != 0
+        for idx in range(len(user_ratings)):
+            if user_ratings[idx] != 0:
+                user_rated_indexes.append(idx)
+
+        num_movies = np.asarray(ratings_matrix).shape[0]
+        for i in range(num_movies): #for each movie i in the dataset
+            summed_rating = 0
+            for j, j_idx in enumerate(user_rated_indexes): #loop through list of non-0 indices
+                
+                cosine_sim = 0
+                if (np.linalg.norm(ratings_matrix[i]) * np.linalg.norm(ratings_matrix[j_idx])) != 0:
+                    cosine_sim = self.similarity(ratings_matrix[i], ratings_matrix[j_idx])
+                else: #denominator for cosine similarity would otherwise be 0
+                    cosine_sim = 0
+
+                summed_rating += cosine_sim * user_ratings[j_idx]
+
+            movie_idx_ratings[i] = summed_rating
+
+
+        # sort movie ratings in reverse descending order; lambda -- sort dictionary by values
+        sorted_movie_ratings = dict(sorted(movie_idx_ratings.items(), key=lambda item: item[1], reverse=True))
+        movie_indexes = list(sorted_movie_ratings.keys())
+        
+        user_not_rated_indexes = []
+        for idx in range(len(user_ratings)):
+            if user_ratings[idx] == 0:
+                user_not_rated_indexes.append(idx)
+
+        n = 0
+        movie_idx_increment = 0
+        while n != k:
+            movie_idx = movie_indexes[movie_idx_increment]
+            if movie_idx in user_not_rated_indexes: # if in user_not_rated list
+                recommendations.append(movie_idx)
+                n += 1
+            movie_idx_increment += 1
 
         ########################################################################
         #                        END OF YOUR CODE                              #
