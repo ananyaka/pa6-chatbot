@@ -408,7 +408,7 @@ class Chatbot:
         and within edit distance max_distance
         """
 
-                title_size = len(title)
+        title_size = len(title)
         title_lowercase = title.lower()
 
         indices = []
@@ -470,7 +470,111 @@ class Chatbot:
         :returns: a list of indices corresponding to the movies identified by
         the clarification
         """
-        pass
+        identified_indices = []
+        year_pattern = '\s\([0-9]{4}\)$' # check if title contains year at the end. Ex: (2009)
+        
+        ##### For disambiguate part 2: #####
+        
+        for i in range(len(candidates)):
+            candidate_idx = candidates[i]
+            candidate_title = self.titles[candidate_idx][0]
+            year_found = re.search(year_pattern, candidate_title)
+            title_no_year = candidate_title
+            if year_found:
+                year_index = year_found.start()
+                title_no_year = title_no_year[0:year_index]
+
+            clarification_found = re.search(clarification, title_no_year)
+            if clarification_found:
+                clarification_idx = clarification_found.start()
+                identified_indices.append(candidate_idx)
+
+
+        if not identified_indices and clarification.isnumeric() and len(clarification) == 4:
+            for i in range(len(candidates)):
+                candidate_idx = candidates[i]
+                candidate_title = self.titles[candidate_idx][0]
+                clarification_found_yr = re.search(clarification, candidate_title)
+                if clarification_found_yr:
+                    clarification_idx = clarification_found_yr.start()
+                    identified_indices.append(candidate_idx)
+
+        ##### For disambiguate part 3: #####
+
+        if not identified_indices and clarification.isnumeric():
+            if int(clarification) <= len(candidates):
+                identified_indices.append(candidates[int(clarification)-1])
+
+
+        if not identified_indices and clarification == "most recent":
+            movies_with_years = []
+            for i in range(len(candidates)):
+                candidate_idx = candidates[i]
+                candidate_title = self.titles[candidate_idx][0]
+                year_found = re.search(year_pattern, candidate_title)
+                if year_found:
+                    year_index = year_found.start()
+                    movies_with_years.append(candidate_idx)
+
+            if movies_with_years:
+                first_movie_idx = movies_with_years[0]
+                first_movie_title = self.titles[first_movie_idx][0]
+                recent_year = first_movie_title[len(first_movie_title)-8:len(first_movie_title)-1]
+                recent_idx = []
+                for i, movie_idx in enumerate(movies_with_years):
+                    movie_title = self.titles[movie_idx][0]
+                    movie_year = movie_title[len(movie_title)-8 : len(movie_title)-1]
+
+                    if movie_year == recent_year:
+                        recent_idx.append(movie_idx)
+                    elif movie_year > recent_year:
+                        recent_idx = []
+                        recent_idx.append(movie_idx)
+
+                for i in range(len(recent_idx)):
+                    identified_indices.append(recent_idx[i])
+
+
+        the_one_pattern = '^[tT]he\s(\w+\s)+one$'
+        the_one_found = re.search(the_one_pattern, clarification)
+        if not identified_indices and the_one_found:
+            target = clarification[4:len(clarification)-4]
+
+            for i in range(len(candidates)):
+                candidate_idx = candidates[i]
+                candidate_title = self.titles[candidate_idx][0]
+                clarification_found = re.search(target, candidate_title)
+                if clarification_found:
+                    clarification_idx = clarification_found.start()
+                    identified_indices.append(candidate_idx)
+
+            if not identified_indices and target == "first" and len(candidates) >= 1:
+                identified_indices.append(candidates[0])
+            elif not identified_indices and target == "second" and len(candidates) >= 2:
+                identified_indices.append(candidates[1])
+            elif not identified_indices and target == "third" and len(candidates) >= 3:
+                identified_indices.append(candidates[2])
+            elif not identified_indices and target == "fourth" and len(candidates) >= 4:
+                identified_indices.append(candidates[3])
+            elif not identified_indices and target == "fifth" and len(candidates) >= 5:
+                identified_indices.append(candidates[4])
+            elif not identified_indices and target == "sixth" and len(candidates) >= 6:
+                identified_indices.append(candidates[5])
+            elif not identified_indices and target == "seventh" and len(candidates) >= 7:
+                identified_indices.append(candidates[6])
+            elif not identified_indices and target == "eighth" and len(candidates) >= 8:
+                identified_indices.append(candidates[7])
+            elif not identified_indices and target == "ninth" and len(candidates) >= 9:
+                identified_indices.append(candidates[8])
+            elif not identified_indices and target == "tenth" and len(candidates) >= 10:
+                identified_indices.append(candidates[9])
+
+
+        if not identified_indices: #if there are no matches for the given clarification
+            identified_indices = candidates
+
+        return identified_indices
+    
 
     ############################################################################
     # 3. Movie Recommendation helper functions                                 #
