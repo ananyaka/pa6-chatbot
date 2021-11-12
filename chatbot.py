@@ -222,7 +222,7 @@ class Chatbot:
             elif title.startswith("An "): 
                 title = title[3:-7] + ', An' + title[-7:]
             for i in range(len(self.titles)):
-                if title == self.titles[i][0]: 
+                if title.lower() == self.titles[i][0].lower(): 
                     matches.append(i)
                     break # for title with a year, there's only 1 match
         else:
@@ -233,7 +233,7 @@ class Chatbot:
             elif title.startswith("An "): 
                 title = title[3:] + ', An' 
             for i in range(len(self.titles)):
-                if title == self.titles[i][0][:-7] or re.search(title_pattern, self.titles[i][0], re.IGNORECASE):
+                if title.lower() == self.titles[i][0][:-7].lower() or re.search(title_pattern, self.titles[i][0], re.IGNORECASE):
                     matches.append(i)
 
         return matches
