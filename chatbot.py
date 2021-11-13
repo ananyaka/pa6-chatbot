@@ -6,6 +6,7 @@ import util
 
 import numpy as np
 import re
+import random
 
 
 # noinspection PyMethodMayBeStatic
