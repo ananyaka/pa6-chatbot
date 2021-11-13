@@ -108,8 +108,114 @@ class Chatbot:
         ########################################################################
         if self.creative:
             response = "I processed {} in creative mode!!".format(line)
-        else:
-            response = "I processed {} in starter mode!!".format(line)
+
+
+        else:  # STARTER MODE:
+            # if not self.started:
+            #     response += self.greeting()
+
+            response = "I'm sorry, I'm not sure I understood that. If you are describing a movie, \
+                        it'd be great if you could put it in quotes ("") so I make sure I understand \
+                        what you mean! Let's discuss movies, one at a time :)"
+
+            yes = ["Yes", "yes", "Yeah", "yeah", "Yep", "yep", "Yup", "yup"]
+            no = ["No", "no", "Nah", "nah", "Nope", "nope", "Negative", "negative"]
+
+            if len(self.movies_rated) < 5 and self.num_reccs == 0: 
+                ask = ["Can you tell me how you felt about another movie?",
+                        "Tell me what you thought of another movie.",
+                        "What about another movie?",
+                        "What are your thoughts on another movie?",
+                        "Besides that, can you tell me what you thought of another movie?",
+                        "What's another movie you have thoughts on?",
+                        "Can you tell me your reaction to another movie?"]
+                rand_ask = ask[random.randint(0,len(ask)-1)]
+
+                titles = self.extract_titles(line)
+                if len(titles) == 1:
+                    title = titles[0]
+                    movie_indices = self.find_movies_by_title(title)
+
+                    if len(movie_indices) == 1: 
+
+                        sentiment = self.extract_sentiment(line)
+                        if sentiment <= -1:
+                            neg_acknowledgement = ["I see", "Okay", "Hmm", "Got it", "Alright"]
+                            rand_neg_acknowledge = neg_acknowledgement[random.randint(0,len(neg_acknowledgement)-1)]
+
+                            dislike = ["didn't like", "weren't a fan of", "disliked", "didn't enjoy", "weren't fond of"]
+                            rand_dislike = dislike[random.randint(0,len(dislike)-1)]
+
+                            response = rand_neg_acknowledge + ", you " + rand_dislike + " \"{}\". ".format(title) 
+                            
+                            if movie_indices[0] not in self.movies_rated:
+                                self.movies_rated[movie_indices[0]] = -1
+
+                        elif sentiment >= 1:
+                            pos_acknowledgement = ["I see", "Cool", "Awesome", "Got it", "Okay"]
+                            rand_pos_acknowledge = pos_acknowledgement[random.randint(0,len(pos_acknowledgement)-1)]
+
+                            like = ["liked", "were a fan of", "liked watching", "enjoyed", "thought well of", "enjoyed watching"]
+                            rand_like = like[random.randint(0,len(like)-1)]
+
+                            response = rand_pos_acknowledge + ", you " + rand_like + " \"{}\"! ".format(title) 
+
+                            if movie_indices[0] not in self.movies_rated:
+                                self.movies_rated[movie_indices[0]] = 1
+
+                        elif sentiment == 0:
+                            neutral_acknowledgement = ["Hmm", "I'm sorry", "Sorry"]
+                            rand_neutral_acknowledge = neutral_acknowledgement[random.randint(0,len(neutral_acknowledgement)-1)]
+
+                            unsure = ["unsure whether", "not sure if", "not clear on whether", "not sure whether", "unsure if"]
+                            rand_unsure = unsure[random.randint(0,len(unsure)-1)]
+
+                            clarify = ["What did you think of it?", "Tell me more about it.", "What were your thoughts on it?"]
+                            rand_clarify = clarify[random.randint(0,len(clarify)-1)]
+
+                            response = rand_neutral_acknowledge + ", I'm " + rand_unsure + " you liked \"{}\". ".format(title) + rand_clarify
+                
+                        if len(self.movies_rated) < 5 and sentiment != 0:
+                            response += rand_ask
+
+                    # else: #TODO: if a movie is provided in quotes, but not in our dataset
+
+                elif len(titles) > 1: #if more than 1 movie was mentioned
+                    response = "I'm sorry, since I'm in Starter mode, I only have the capacity to understand one " \
+                                "movie at a time, unfortunately. I'd really appreciate if you could list the " \
+                                "movies you mentioned with one movie per line. Thank you!"
+
+            #start giving recommendations -- TODO: BUGGY, fix!
+            if len(self.movies_rated) >= 5:
+                user_ratings = []  # list: gets all indices of users ratings that != 0, and fills with 0s for non-rated
+                for i in range(len(self.ratings)):
+                    if i in self.movies_rated:
+                        user_ratings.append(self.movies_rated[i])
+                    else:
+                        user_ratings.append(0)
+
+                recc_idx = self.recommend(user_ratings, self.ratings, self.total_reccs_poss, False)
+                recc = self.titles[recc_idx[self.num_reccs]][0]
+                if self.num_reccs == 0: # give the first movie recommendation
+                    response += "\nThanks for your inputs! Given what you told me, I think you would like \"" + recc + "\"!"
+                    response += "\nWould you like more recommendations?"
+                    self.num_reccs += 1
+
+                elif self.num_reccs < self.total_reccs_poss:
+                    if any(item in yes for item in line) and any(item in no for item in line): 
+                        response = "I'm sorry, I didn't quite understand. Would you like more recommendations?"
+                    elif any(item in yes for item in line):
+                        response = "Sure! I would also recommend " + recc + "\"!"
+                        response += "\nWould you like more recommendations?"
+                        self.num_reccs += 1
+                    elif any(item in no for item in line): 
+                        response = self.goodbye()
+                        
+                elif self.num_reccs == self.total_reccs_poss:
+                    response = "Actually, I've given you {} movie recommendations above, ".format(self.total_reccs_poss)
+                    response += '''I'm sure there must be at least one new movie to try! I don't have more recommendations for now, but 
+                                    feel free to come back soon with new reviews! Thanks for chatting with me today!'''
+            
 
         ########################################################################
         #                          END OF YOUR CODE                            #
