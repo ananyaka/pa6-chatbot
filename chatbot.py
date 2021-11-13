@@ -29,7 +29,7 @@ class Chatbot:
         'worst', 'amazing',  'best', 'terrible', 'absolutely', 'worse'}
         self.minWordLength = 3
         self.movies_rated = {}
-        self.reccs = 0
+        self.num_reccs = 0
         self.started = False 
         self.total_reccs_pos = 10
         ########################################################################
