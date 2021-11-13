@@ -25,6 +25,8 @@ class Chatbot:
         self.titles, ratings = util.load_ratings('data/ratings.txt')
         self.sentiment = util.load_sentiment_dictionary('data/sentiment.txt')
         self.negations = self.load_negations('deps/negations.txt')
+        self.intensifiers = {'loved', 'love', 'incredible', 'really', 'very', 'hate', 'hated', 'favorite',
+        'worst', 'amazing',  'best', 'terrible', 'absolutely', 'worse'}
         self.minWordLength = 3
         ########################################################################
         # TODO: Binarize the movie ratings matrix.                             #
@@ -381,32 +383,68 @@ class Chatbot:
         pre-processed with preprocess()
         :returns: a numerical value for the sentiment of the text
         """
+
+        def clamp(sentiment):
+            if sentiment < -2:
+                return -2
+            elif sentiment > 2:
+                return 2
+            else:
+                return int(sentiment)
+
         words = preprocessed_input.split()
+
+        weight = 1.0
+        if re.search("!+", preprocessed_input):
+            weight += 0.5
+
         num_pos = 0
         num_neg = 0
         quote = False
+        foundNegative = False
         for word in words:
             if '"' in word or quote:
                 quote = False if quote else True
                 continue
+            if word in self.negations:
+                foundNegative = True
+                continue
+
+            if word in self.intensifiers:
+                weight += 1
+
             if word in self.sentiment:
-                if self.sentiment[word] == "pos":
+                if (foundNegative and self.sentiment[word] == 'neg') or \
+                        (not foundNegative and self.sentiment[word] == 'pos'):
                     num_pos += 1
-                else:
+                elif (foundNegative and self.sentiment[word] == 'pos') or \
+                        (not foundNegative and self.sentiment[word] == 'neg'):
                     num_neg += 1
             else:
                 p_word = self.extract_edit_distance_words(word)
                 if p_word == "": 
+                    if foundNegative:
+                        num_neg += 1
+                        foundNegative = False
                     continue
-                if self.sentiment[p_word] == "pos":
+                if (foundNegative and self.sentiment[p_word] == 'neg') or \
+                        (not foundNegative and self.sentiment[p_word] == 'pos'):
                     num_pos += 1
-                else:
+                elif (foundNegative and self.sentiment[p_word] == 'pos') or \
+                        (not foundNegative and self.sentiment[p_word] == 'neg'):
                     num_neg += 1
+            if foundNegative:
+                foundNegative = False
         
-        sentiment = -1 if num_neg >= 1 else 1
+        # if "Ex Machina" in preprocessed_input:
+        #     print(preprocessed_input, "weight:", weight, "num_pos:", num_pos, "num_neg:", num_neg, end=" sentiment ")
+        
+        sentiment = -1 * weight if (num_neg % 2 == 1 and weight*num_pos < 3) or foundNegative else weight
         sentiment = 0 if num_neg == num_pos == 0 else sentiment
-
-        return self.apply_negation(sentiment, words)
+        print(sentiment)
+        # print(num_pos, weight, sentiment, clamp(sentiment))
+        # if "Ex Machina" in preprocessed_input:
+        return clamp(sentiment)
         
     def extract_sentiment_for_movies(self, preprocessed_input):
         """Creative Feature: Extracts the sentiments from a line of
@@ -429,8 +467,33 @@ class Chatbot:
         :returns: a list of tuples, where the first item in the tuple is a movie
         title, and the second is the sentiment in the text toward that movie
         """
-        pass
-    
+        res = []
+        movies = self.extract_titles(preprocessed_input)
+        sentiment = self.extract_sentiment(preprocessed_input)
+
+        text_list = preprocessed_input.split()
+
+        if len(movies) == 0:
+            sentiment = self.extract_sentiment(preprocessed_input)
+            res.append((self.active_movie, sentiment))
+        elif len(movies) == 1 or re.search(r"(both|and)", preprocessed_input):
+            sentiment = self.extract_sentiment(preprocessed_input)
+            for title in movies:
+                res.append((title, sentiment))
+        else:
+            prev = 0
+            curr = 0
+            for i, title in enumerate(movies):
+                curr = preprocessed_input.find(title) + len(title) + 1
+                if i == len(movies) - 1:
+                    curr = -1
+                sub_text = preprocessed_input[:curr]
+                sentiment = self.extract_sentiment(sub_text)
+                # print(preprocessed_input, ":::", sub_text, "   " ,sentiment)
+                # print("===========================")
+                prev = curr
+                res.append((title, sentiment))
+        return res
     
     
     def get_str_units(self, str):
