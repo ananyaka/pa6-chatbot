@@ -314,6 +314,67 @@ class Chatbot:
         :param title: a string containing a movie title
         :returns: a list of indices of matching movies
         """
+        indices = [263, 269, 45]
+        title = title.lower()
+        movie_pattern = '([^(]+)(?:\(a\.k\.a\.\s([^)]*)\)\s)?(?:\(([^0-9)]*)\))?\s?(\([0-9]{4}\))?'
+        article_pattern = '(.*),\s(.*)'
+        matches = []
+
+        # detect if year was entered, articles
+        for i in range(len(self.titles)):
+            movie_capture = re.search(movie_pattern, self.titles[i][0], re.IGNORECASE)
+            movie = movie_capture.group(1).strip()
+            movie_article_capture = re.search(article_pattern, movie, re.IGNORECASE)
+
+            alt_movie = movie_capture.group(2)
+            foreign_movie = movie_capture.group(3)
+            foreign_movie_article_capture = re.search(article_pattern, str(foreign_movie), re.IGNORECASE)
+            year = movie_capture.group(4)
+
+            year_pattern = '\s(\([0-9]{4}\))$' # check if title contains year at the end. Ex: (2009)
+            contains_year = re.search(year_pattern, title, re.IGNORECASE)
+
+            title_pattern = f"\\b{title}\\b"
+            #detect articles
+            #if i == 1142:
+                #print(movie, alt_movie, foreign_movie, year)
+
+            if movie:
+                if title == movie.lower() or re.search(title_pattern, self.titles[i][0], re.IGNORECASE): #disambiguate not working
+                    matches.append(i)
+                if movie_article_capture:
+                    rearranged_title = (movie_article_capture.group(2) + " " + movie_article_capture.group(1)).lower()
+                    if title == rearranged_title:
+                        matches.append(i)
+                    if contains_year:
+                        if title == rearranged_title + " " + str(year):
+                            matches.append(i)
+                if contains_year:
+                    if title == movie.lower() + " " + str(year):
+                        matches.append(i)
+            if alt_movie:
+                if title == alt_movie.lower():
+                    matches.append(i)
+                if contains_year:
+                    if title == alt_movie.lower() + " " + str(year):
+                        matches.append(i)
+            if foreign_movie:
+                if title == foreign_movie.lower():
+                    matches.append(i)
+                if foreign_movie_article_capture:
+                    rearranged_title = (foreign_movie_article_capture.group(2) + " " + foreign_movie_article_capture.group(1)).lower()
+                    if title == rearranged_title:
+                        matches.append(i)
+                    if contains_year:
+                        if title == rearranged_title + " " + str(year):
+                            matches.append(i)
+                if contains_year:
+                    if title == foreign_movie.lower() + " " + str(year):
+                        matches.append(i)
+        
+        return matches
+        #print(movie, alt_movie, foreign_movie, year)
+    '''
         matches = []
         title = title.lower()
         year_pattern = '\s(\([0-9]{4}\))$' # check if title contains year at the end. Ex: (2009)
@@ -365,10 +426,7 @@ class Chatbot:
                 if alt_title_capture:
                     if title == alt_title_capture.group(1).lower():
                         matches.append(i)
-                
-
-
-        return matches
+    '''
 
     def extract_edit_distance_words(self, word):
         for i in range(len(word), self.minWordLength, -1):
