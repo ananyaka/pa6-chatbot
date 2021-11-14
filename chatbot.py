@@ -355,7 +355,6 @@ class Chatbot:
         :param title: a string containing a movie title
         :returns: a list of indices of matching movies
         """
-        indices = [263, 269, 45]
         title = title.lower()
         movie_pattern = '([^(]+)(?:\(a\.k\.a\.\s([^)]*)\)\s)?(?:\(([^0-9)]*)\))?\s?(\([0-9]{4}\))?'
         article_pattern = '(.*),\s(.*)'
@@ -376,9 +375,6 @@ class Chatbot:
             contains_year = re.search(year_pattern, title, re.IGNORECASE)
 
             title_pattern = f"\\b{title}\\b"
-            #detect articles
-            #if i == 1142:
-                #print(movie, alt_movie, foreign_movie, year)
 
             if movie:
                 if title == movie.lower() or re.search(title_pattern, self.titles[i][0], re.IGNORECASE): #disambiguate not working
@@ -414,61 +410,7 @@ class Chatbot:
                         matches.append(i)
         
         return matches
-        #print(movie, alt_movie, foreign_movie, year)
-    '''
-        matches = []
-        title = title.lower()
-        year_pattern = '\s(\([0-9]{4}\))$' # check if title contains year at the end. Ex: (2009)
-        year_index = re.search(year_pattern, title)
-
-        title_pattern = f"\\b{title}\\b"
-        alt_title_pattern = '\(a\.k\.a\.\s(.*)\)\s' # looks for alternate title
-        foreign_title_no_art_pattern = '\({title}\)\s' # looks for foreign title that matches what's entered (no articles)
-        foreign_title_art_pattern = '\((.*),\s(.*)\)\s' # check if title has a foreign title w/ article
-
-        # check if year starts with The, A, or An
-
-        if year_index: # if the title contains a year
-            if title.startswith("the "): 
-                title = title[4:-7] + ', the' + title[-7]
-            elif title.startswith("a "): 
-                title = title[2:-7] + ', a' + title[-7:]
-            elif title.startswith("an "): 
-                title = title[3:-7] + ', an' + title[-7:]
-            for i in range(len(self.titles)):
-                if title == self.titles[i][0].lower(): # TO DO?: add case where alt title + year are entered
-                    matches.append(i)
-                    break # for title with a year, there's only 1 match
-              
-                alt_title_capture = re.search(alt_title_pattern, self.titles[i][0], re.IGNORECASE)
-                if alt_title_capture:
-                    if title == (alt_title_capture.group(1) + " " + year_index.group(1)).lower():
-                        matches.append(i)
-                        break
-                    
-
-        else:
-            if title.startswith("the "): 
-                title = title[4:] + ', the' 
-            elif title.startswith("a "): 
-                title = title[2:] + ', a' 
-            elif title.startswith("an "): 
-                title = title[3:] + ', an' 
-            for i in range(len(self.titles)):
-                if title == self.titles[i][0][:-7].lower() or re.search(title_pattern, self.titles[i][0], re.IGNORECASE)\
-                or re.search(foreign_title_no_art_pattern, self.titles[i][0], re.IGNORECASE):
-                    matches.append(i)
-                foreign_title_art = re.search(foreign_title_art_pattern, self.titles[i][0], re.IGNORECASE)
-                if foreign_title_art:
-                    if title == (foreign_title_art.group(2) + " " + foreign_title_art.group(1)).lower():
-                        matches.append(i)
-                
-                alt_title_capture = re.search(alt_title_pattern, self.titles[i][0], re.IGNORECASE)
-                if alt_title_capture:
-                    if title == alt_title_capture.group(1).lower():
-                        matches.append(i)
-    '''
-
+        
     def extract_edit_distance_words(self, word):
         for i in range(len(word), self.minWordLength, -1):
             sub_str = word[0: i]
