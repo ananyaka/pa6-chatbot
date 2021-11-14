@@ -32,7 +32,7 @@ class Chatbot:
         self.movies_rated = {}
         self.num_reccs = 0
         self.started = False 
-        self.total_reccs_pos = 10
+        self.total_reccs_poss = 10
         ########################################################################
         # TODO: Binarize the movie ratings matrix.                             #
         ########################################################################
