@@ -355,38 +355,62 @@ class Chatbot:
         :param title: a string containing a movie title
         :returns: a list of indices of matching movies
         """
+        title = title.lower()
+        movie_pattern = '([^(]+)(?:\(a\.k\.a\.\s([^)]*)\)\s)?(?:\(([^0-9)]*)\))?\s?(\([0-9]{4}\))?'
+        article_pattern = '(.*),\s(.*)'
         matches = []
-        year_pattern = '\s\([0-9]{4}\)$' # check if title contains year at the end. Ex: (2009)
-        year_index = re.search(year_pattern, title)
 
-        title_pattern = f"\\b{title}\\b"
+        # detect if year was entered, articles
+        for i in range(len(self.titles)):
+            movie_capture = re.search(movie_pattern, self.titles[i][0], re.IGNORECASE)
+            movie = movie_capture.group(1).strip()
+            movie_article_capture = re.search(article_pattern, movie, re.IGNORECASE)
 
-        # check if year starts with The, A, or An
+            alt_movie = movie_capture.group(2)
+            foreign_movie = movie_capture.group(3)
+            foreign_movie_article_capture = re.search(article_pattern, str(foreign_movie), re.IGNORECASE)
+            year = movie_capture.group(4)
 
-        if year_index: # if the title contains a year
-            if title.startswith("The "): 
-                title = title[4:-7] + ', The' + title[-7]
-            elif title.startswith("A "): 
-                title = title[2:-7] + ', A' + title[-7:]
-            elif title.startswith("An "): 
-                title = title[3:-7] + ', An' + title[-7:]
-            for i in range(len(self.titles)):
-                if title == self.titles[i][0]: 
+            year_pattern = '\s(\([0-9]{4}\))$' # check if title contains year at the end. Ex: (2009)
+            contains_year = re.search(year_pattern, title, re.IGNORECASE)
+
+            title_pattern = f"\\b{title}\\b"
+
+            if movie:
+                if title == movie.lower() or re.search(title_pattern, self.titles[i][0], re.IGNORECASE): #disambiguate not working
                     matches.append(i)
-                    break # for title with a year, there's only 1 match
-        else:
-            if title.startswith("The "): 
-                title = title[4:] + ', The' 
-            elif title.startswith("A "): 
-                title = title[2:] + ', A' 
-            elif title.startswith("An "): 
-                title = title[3:] + ', An' 
-            for i in range(len(self.titles)):
-                if title == self.titles[i][0][:-7] or re.search(title_pattern, self.titles[i][0], re.IGNORECASE):
+                if movie_article_capture:
+                    rearranged_title = (movie_article_capture.group(2) + " " + movie_article_capture.group(1)).lower()
+                    if title == rearranged_title:
+                        matches.append(i)
+                    if contains_year:
+                        if title == rearranged_title + " " + str(year):
+                            matches.append(i)
+                if contains_year:
+                    if title == movie.lower() + " " + str(year):
+                        matches.append(i)
+            if alt_movie:
+                if title == alt_movie.lower():
                     matches.append(i)
-
+                if contains_year:
+                    if title == alt_movie.lower() + " " + str(year):
+                        matches.append(i)
+            if foreign_movie:
+                if title == foreign_movie.lower():
+                    matches.append(i)
+                if foreign_movie_article_capture:
+                    rearranged_title = (foreign_movie_article_capture.group(2) + " " + foreign_movie_article_capture.group(1)).lower()
+                    if title == rearranged_title:
+                        matches.append(i)
+                    if contains_year:
+                        if title == rearranged_title + " " + str(year):
+                            matches.append(i)
+                if contains_year:
+                    if title == foreign_movie.lower() + " " + str(year):
+                        matches.append(i)
+        
         return matches
-
+        
     def extract_edit_distance_words(self, word):
         for i in range(len(word), self.minWordLength, -1):
             sub_str = word[0: i]

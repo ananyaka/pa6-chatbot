@@ -141,7 +141,16 @@ def test_find_movies_by_title():
         ('Titanic (1997)', [1359]),
         ('An American in Paris (1951)', [721]),
         ('The Notebook (1220)', []),
-        ('Scream', [1142]),
+        ('Scream', [1142, 1357, 2629, 546]),
+        ('Se7en', [45]), # this and the ones after added by Grace for creative checks
+        ('sCReaM', [1142, 1357, 2629, 546]),
+        ('Seven (1995)', [45]),
+        ('Se7en (1995)', [45]),
+        ('Yao a yao yao dao waipo qiao', [29]),
+        ('La Guerre du feu', [2439]),
+        ('Les Voleurs (1996)', [1149]),
+        ('Percy Jackson', [7463, 8377]),
+        ('Se7en (1995)', [45]),
     ]
 
     tests_passed = True
