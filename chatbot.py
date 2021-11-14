@@ -122,9 +122,7 @@ class Chatbot:
             # if not self.started:
             #     response += self.greeting()
 
-            response = "I'm sorry, I'm not sure I understood that. If you are describing a movie, \
-                        it'd be great if you could put it in quotes ("") so I make sure I understand \
-                        what you mean! Let's discuss movies, one at a time :)"
+            response = "I'm sorry, I'm not sure I understood that. If you are describing a movie, it'd be great if you could put it in quotes \" \" so I make sure I understand what you mean! Let's discuss movies, one at a time :)"
 
             yes = ["yes", "yeah", "yep", "yup", "sure", "ya"]
             no = ["no", "nah","nope", "negative", "neh"]
@@ -198,9 +196,7 @@ class Chatbot:
                     # else: #TODO: if a movie is provided in quotes, but not in our dataset
 
                 elif len(titles) > 1: #if more than 1 movie was mentioned
-                    response = "I'm sorry, since I'm in Starter mode, I only have the capacity to understand one " \
-                                "movie at a time, unfortunately. I'd really appreciate if you could list the " \
-                                "movies you mentioned with one movie per line. Thank you!"
+                    response = "I'm sorry, since I'm in Starter mode, I only have the capacity to understand one movie at a time, unfortunately. I'd really appreciate if you could list the movies you mentioned with one movie per line. Thank you!"
 
 
             #start giving recommendations -- TODO: BUGGY, fix!
