@@ -504,7 +504,7 @@ class Chatbot:
         # if "Ex Machina" in preprocessed_input:
         #     print(preprocessed_input, "weight:", weight, "num_pos:", num_pos, "num_neg:", num_neg, end=" sentiment ")
         
-        sentiment = -1 * weight if (num_neg % 2 == 1 and weight*num_pos < 3) or foundNegative else weight
+        sentiment = -1 * weight if (num_neg % 2 == 1 and num_pos < 3*num_neg) or foundNegative else weight
         sentiment = 0 if num_neg == num_pos == 0 and not foundNegative else sentiment
         # print(sentiment)
         # print(num_pos, weight, sentiment, clamp(sentiment))
@@ -554,6 +554,8 @@ class Chatbot:
         movies = get_movies(preprocessed_input)
         sentiment = self.extract_sentiment(preprocessed_input)
 
+        preprocessed_input = preprocessed_input.replace("but", "")
+        preprocessed_input = preprocessed_input.replace("however", "")
         if len(movies) == 0:
             sentiment = self.extract_sentiment(preprocessed_input)
             res.append((title, sentiment))
