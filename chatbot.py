@@ -6,6 +6,7 @@ import util
 
 import numpy as np
 import re
+import random
 
 
 # noinspection PyMethodMayBeStatic
@@ -28,6 +29,10 @@ class Chatbot:
         self.intensifiers = {'loved', 'love', 'incredible', 'really', 'very', 'hate', 'hated', 'favorite',
         'worst', 'amazing',  'best', 'terrible', 'absolutely', 'worse', 'awful', 'adore'}
         self.minWordLength = 3
+        self.movies_rated = {}
+        self.num_reccs = 0
+        self.started = False 
+        self.total_reccs_pos = 10
         ########################################################################
         # TODO: Binarize the movie ratings matrix.                             #
         ########################################################################
