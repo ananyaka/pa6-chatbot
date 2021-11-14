@@ -6,6 +6,7 @@ import util
 
 import numpy as np
 import re
+import random
 
 
 # noinspection PyMethodMayBeStatic
@@ -28,6 +29,10 @@ class Chatbot:
         self.intensifiers = {'loved', 'love', 'incredible', 'really', 'very', 'hate', 'hated', 'favorite',
         'worst', 'amazing',  'best', 'terrible', 'absolutely', 'worse', 'awful', 'adore'}
         self.minWordLength = 3
+        self.movies_rated = {}
+        self.num_reccs = 0
+        self.started = False 
+        self.total_reccs_pos = 10
         ########################################################################
         # TODO: Binarize the movie ratings matrix.                             #
         ########################################################################
@@ -475,7 +480,7 @@ class Chatbot:
 
         if len(movies) == 0:
             sentiment = self.extract_sentiment(preprocessed_input)
-            res.append((self.active_movie, sentiment))
+            res.append((title, sentiment))
         elif len(movies) == 1 or re.search(r"(both|and)", preprocessed_input):
             sentiment = self.extract_sentiment(preprocessed_input)
             for title in movies:
