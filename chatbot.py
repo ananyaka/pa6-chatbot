@@ -115,6 +115,7 @@ class Chatbot:
         ########################################################################
         if self.creative:
             response = "I processed {} in creative mode!!".format(line)
+            
 
 
         else:  # STARTER MODE:
@@ -125,8 +126,8 @@ class Chatbot:
                         it'd be great if you could put it in quotes ("") so I make sure I understand \
                         what you mean! Let's discuss movies, one at a time :)"
 
-            yes = ["Yes", "yes", "Yeah", "yeah", "Yep", "yep", "Yup", "yup"]
-            no = ["No", "no", "Nah", "nah", "Nope", "nope", "Negative", "negative"]
+            yes = ["yes", "yeah", "yep", "yup", "sure", "ya"]
+            no = ["no", "nah","nope", "negative", "neh"]
 
             if len(self.movies_rated) < 5 and self.num_reccs == 0: 
                 ask = ["Can you tell me how you felt about another movie?",
@@ -185,6 +186,15 @@ class Chatbot:
                         if len(self.movies_rated) < 5 and sentiment != 0:
                             response += rand_ask
 
+                    else:
+                        confused = ["I don't think I know", "I haven't heard of"]
+                        rand_confused = confused[random.randint(0,len(confused)-1)]
+
+                        asking_for_another = ["sorry...Tell me about another movie you liked.", "how about you tell me about another movie? "]
+                        rand_asking_for_another = asking_for_another[random.randint(0,len(asking_for_another)-1)]
+                        
+                        response = rand_confused +  " \"{}\", ".format(title)  + rand_asking_for_another
+
                     # else: #TODO: if a movie is provided in quotes, but not in our dataset
 
                 elif len(titles) > 1: #if more than 1 movie was mentioned
@@ -192,8 +202,9 @@ class Chatbot:
                                 "movie at a time, unfortunately. I'd really appreciate if you could list the " \
                                 "movies you mentioned with one movie per line. Thank you!"
 
+
             #start giving recommendations -- TODO: BUGGY, fix!
-            if len(self.movies_rated) >= 5:
+            if len(self.movies_rated) == 5:
                 user_ratings = []  # list: gets all indices of users ratings that != 0, and fills with 0s for non-rated
                 for i in range(len(self.ratings)):
                     if i in self.movies_rated:
@@ -208,17 +219,22 @@ class Chatbot:
                     response += "\nWould you like more recommendations?"
                     self.num_reccs += 1
 
-                elif self.num_reccs < self.total_reccs_poss:
-                    if any(item in yes for item in line) and any(item in no for item in line): 
+                elif self.num_reccs < self.total_reccs_poss :
+                    temp_list = list(line.lower().split(" "))
+                    if any(item in yes for item in temp_list) and any(item in no for item in temp_list): 
                         response = "I'm sorry, I didn't quite understand. Would you like more recommendations?"
-                    elif any(item in yes for item in line):
-                        response = "Sure! I would also recommend " + recc + "\"!"
+                    elif any(item in yes for item in temp_list):
+                        yes_more = ["Sure! I would also recommend", "I think you would also like", "I feel you would also enjoy", "I think you will have a good time watching"]
+                        rand_yes_more = yes_more[random.randint(0,len(yes_more)-1)]
+                        print(len(self.titles[recc_idx[self.num_reccs]]))
+                        response =  rand_yes_more +  " \""+ self.titles[recc_idx[self.num_reccs]][0] + "\"!"
                         response += "\nWould you like more recommendations?"
                         self.num_reccs += 1
-                    elif any(item in no for item in line): 
+                    elif any(item in no for item in temp_list):
                         response = self.goodbye()
                         
-                elif self.num_reccs == self.total_reccs_poss:
+                #elif self.num_reccs == self.total_reccs_poss:
+                else:
                     response = "Actually, I've given you {} movie recommendations above, ".format(self.total_reccs_poss)
                     response += '''I'm sure there must be at least one new movie to try! I don't have more recommendations for now, but 
                                     feel free to come back soon with new reviews! Thanks for chatting with me today!'''
