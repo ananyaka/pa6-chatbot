@@ -33,6 +33,9 @@ class Chatbot:
         self.num_reccs = 0
         self.started = False 
         self.total_reccs_poss = 10
+        self.mid_question = False
+        self.creative_sentiment = 0
+        self.creative_movie = ""
         ########################################################################
         # TODO: Binarize the movie ratings matrix.                             #
         ########################################################################
@@ -61,7 +64,7 @@ class Chatbot:
         # TODO: Write a short greeting message                                 #
         ########################################################################
 
-        greeting_message = "How can I help you?"
+        greeting_message = "Hi! How can I help you?"
 
         ########################################################################
         #                             END OF YOUR CODE                         #
@@ -76,7 +79,7 @@ class Chatbot:
         # TODO: Write a short farewell message                                 #
         ########################################################################
  
-        goodbye_message = "Have a nice day!"
+        goodbye_message = "It was lovely chatting with you. Have a nice day!"
 
         ########################################################################
         #                          END OF YOUR CODE                            #
@@ -114,7 +117,44 @@ class Chatbot:
         # code in a modular fashion to make it easier to improve and debug.    #
         ########################################################################
         if self.creative:
-            response = "I processed {} in creative mode!!".format(line)
+            yes = ["yes", "yeah", "yep", "yup", "sure", "ya"]
+            no = ["no", "nah","nope", "negative", "neh"]
+            neg_acknowledgement = ["I see", "Okay", "Hmm", "Got it", "Alright"]
+            rand_neg_acknowledge = neg_acknowledgement[random.randint(0,len(neg_acknowledgement)-1)]
+
+            dislike = ["didn't like", "weren't a fan of", "disliked", "didn't enjoy", "weren't fond of"]
+            rand_dislike = dislike[random.randint(0,len(dislike)-1)]
+
+            pos_acknowledgement = ["I see", "Cool", "Awesome", "Got it", "Okay"]
+            rand_pos_acknowledge = pos_acknowledgement[random.randint(0,len(pos_acknowledgement)-1)]
+
+            like = ["liked", "were a fan of", "liked watching", "enjoyed", "thought well of", "enjoyed watching"]
+            rand_like = like[random.randint(0,len(like)-1)]
+            if len(self.movies_rated) < 5 and self.num_reccs == 0:
+                if (self.mid_question == False):
+                    self.creative_sentiment = self.extract_sentiment(line)
+                    title_close = self.extract_titles(line)
+                    title_indice = self.find_movies_closest_to_title(str(title_close[0]))
+                    response = "Did you mean " + self.titles[title_indice[0]][0] + "?"
+                    self.creative_movie = self.titles[title_indice[0]][0]
+                    self.mid_question = True
+                else:
+                    temp_list = list(line.lower().split(" "))
+                    if any(item in yes for item in temp_list):
+                        if self.creative_sentiment >= 1:
+                            response = rand_pos_acknowledge + ",you " + rand_like + " \"{}\"! ".format(self.creative_movie)
+                        elif self.creative_sentiment <= -1:
+                            response = rand_neg_acknowledge + ",you " + rand_dislike + " \"{}\"! ".format(self.creative_movie)
+                        self.mid_question = False
+                        self.movies_rated += 1
+                    elif any(item in no for item in temp_list):
+                        response = "I am unable to find a title close to what you types. Can you type that again for me please?"
+                        self.mid_question = False
+
+
+
+
+
             
 
 
@@ -299,7 +339,7 @@ class Chatbot:
         """
         to_ret = [] 
 
-        if self.creative:
+        if self.creative and (not '"' in preprocessed_input):
         #title = 'I thought 10 things i hate about you was great'
         #titles_set = ["10 Things I Hate About You (1999)"]
             matches = []
