@@ -26,7 +26,7 @@ class Chatbot:
         self.sentiment = util.load_sentiment_dictionary('data/sentiment.txt')
         self.negations = self.load_negations('deps/negations.txt')
         self.intensifiers = {'loved', 'love', 'incredible', 'really', 'very', 'hate', 'hated', 'favorite',
-        'worst', 'amazing',  'best', 'terrible', 'absolutely', 'worse'}
+        'worst', 'amazing',  'best', 'terrible', 'absolutely', 'worse', 'awful', 'adore'}
         self.minWordLength = 3
         ########################################################################
         # TODO: Binarize the movie ratings matrix.                             #
@@ -440,7 +440,7 @@ class Chatbot:
         #     print(preprocessed_input, "weight:", weight, "num_pos:", num_pos, "num_neg:", num_neg, end=" sentiment ")
         
         sentiment = -1 * weight if (num_neg % 2 == 1 and weight*num_pos < 3) or foundNegative else weight
-        sentiment = 0 if num_neg == num_pos == 0 else sentiment
+        sentiment = 0 if num_neg == num_pos == 0 and not foundNegative else sentiment
         print(sentiment)
         # print(num_pos, weight, sentiment, clamp(sentiment))
         # if "Ex Machina" in preprocessed_input:
