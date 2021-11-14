@@ -14,7 +14,7 @@ FEATURE - Alternate/foreign titles: NO
 FEATURE - Disambiguation (part 1): NO
 FEATURE - Fine-grained sentiment extraction: NO
 FEATURE - Spell-correcting fallback for find_movies_by_title: NO
-FEATURE - Extracting sentiment with multiple-movie input: NO
+FEATURE - Extracting sentiment with multiple-movie input: YES
 FEATURE - Disambiguation (part 2): NO
 FEATURE - Disambiguation (part 3): NO
 FEATURE - Dialogue for spell-checking: NO

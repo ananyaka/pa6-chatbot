@@ -481,7 +481,7 @@ class Chatbot:
         if len(movies) == 0:
             sentiment = self.extract_sentiment(preprocessed_input)
             res.append((title, sentiment))
-        elif len(movies) == 1 or re.search(r"(both|and)", preprocessed_input):
+        elif len(movies) == 1 or re.search(r"(both|and|either|neither)", preprocessed_input):
             sentiment = self.extract_sentiment(preprocessed_input)
             for title in movies:
                 res.append((title, sentiment))
