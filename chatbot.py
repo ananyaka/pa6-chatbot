@@ -510,7 +510,8 @@ class Chatbot:
         # print(num_pos, weight, sentiment, clamp(sentiment))
         # if "Ex Machina" in preprocessed_input:
         return clamp(sentiment)
-        
+
+
     def extract_sentiment_for_movies(self, preprocessed_input):
         """Creative Feature: Extracts the sentiments from a line of
         pre-processed text that may contain multiple movies. Note that the
@@ -532,18 +533,31 @@ class Chatbot:
         :returns: a list of tuples, where the first item in the tuple is a movie
         title, and the second is the sentiment in the text toward that movie
         """
+        def get_movies(preprocessed_input):
+            to_ret = []
+            str1 = preprocessed_input
+            temp = str1
+            while(True):
+                str1 = temp
+                a = str1.find('"')
+                if (a == -1):
+                    break
+                for i in range(a+1, len(str1)):
+                    if (str1[i] == '"'):
+                        b = i 
+                        break
+                to_ret.append(str1[a+1:b])
+                temp = str1[b+1:]
+            return to_ret
+
         res = []
-        movies = self.extract_titles(preprocessed_input)
+        movies = get_movies(preprocessed_input)
         sentiment = self.extract_sentiment(preprocessed_input)
 
-        text_list = preprocessed_input.split()
-
-        print(movies)
-        print("===================")
         if len(movies) == 0:
             sentiment = self.extract_sentiment(preprocessed_input)
             res.append((title, sentiment))
-        elif len(movies) == 1 or re.search(r"(both|and)", preprocessed_input):
+        elif len(movies) == 1 or re.search(r"(both|and|neither|either)", preprocessed_input):
             sentiment = self.extract_sentiment(preprocessed_input)
             for title in movies:
                 res.append((title, sentiment))
