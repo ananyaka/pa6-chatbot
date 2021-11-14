@@ -482,7 +482,7 @@ class Chatbot:
         
         sentiment = -1 * weight if (num_neg % 2 == 1 and weight*num_pos < 3) or foundNegative else weight
         sentiment = 0 if num_neg == num_pos == 0 and not foundNegative else sentiment
-        print(sentiment)
+        # print(sentiment)
         # print(num_pos, weight, sentiment, clamp(sentiment))
         # if "Ex Machina" in preprocessed_input:
         return clamp(sentiment)
@@ -514,6 +514,8 @@ class Chatbot:
 
         text_list = preprocessed_input.split()
 
+        print(movies)
+        print("===================")
         if len(movies) == 0:
             sentiment = self.extract_sentiment(preprocessed_input)
             res.append((title, sentiment))
