@@ -32,7 +32,7 @@ class Chatbot:
         self.movies_rated = {}
         self.num_reccs = 0
         self.started = False 
-        self.total_reccs_pos = 10
+        self.total_reccs_poss = 10
         ########################################################################
         # TODO: Binarize the movie ratings matrix.                             #
         ########################################################################
@@ -285,21 +285,57 @@ class Chatbot:
         pre-processed with preprocess()
         :returns: list of movie titles that are potentially in the text
         """
-        to_ret = []
-        str1 = preprocessed_input
-        temp = str1
-        while(True):
-            str1 = temp
-            a = str1.find('"')
-            if (a == -1):
-                break
-            for i in range(a+1, len(str1)):
-                if (str1[i] == '"'):
-                    b = i 
+        to_ret = [] 
+
+        if self.creative:
+        #title = 'I thought 10 things i hate about you was great'
+        #titles_set = ["10 Things I Hate About You (1999)"]
+            matches = []
+
+            for titles in self.titles:
+                #print(titles[0])
+                year_pattern = '\s\([0-9]{4}\)$' # check if title contains year at the end. Ex: (2009)
+                year_index = re.search(year_pattern, titles[0])
+                if year_index:
+                    if ',' in titles[0]:
+                        temp = titles[0][:len(titles[0])-7].lower()
+                        index = temp.index(',')
+                        to_add = temp[index+1:].lower() + ' ' + temp[:index].lower()
+                        matches.append(to_add.strip())
+                    else:
+                        matches.append(titles[0][:len(titles[0])-7].lower())
+    
+                title_pattern = f"\\b{titles[0]}\\b"
+            #print(matches)
+
+            res = [preprocessed_input[i: j] for i in range(len(preprocessed_input)) 
+            for j in range(i + 1, len(preprocessed_input) + 1)]
+
+            for r in res:
+                if r.lower() in matches:
+                    #print(r)
+                    to_ret.append(r)
+            return [max(to_ret, key = len).lower()]
+
+
+        
+        else:
+            to_ret = []
+            str1 = preprocessed_input
+            temp = str1
+            while(True):
+                str1 = temp
+                a = str1.find('"')
+                if (a == -1):
                     break
-            to_ret.append(str1[a+1:b])
-            temp = str1[b+1:]
-        return to_ret
+                for i in range(a+1, len(str1)):
+                    if (str1[i] == '"'):
+                        b = i 
+                        break
+                to_ret.append(str1[a+1:b])
+                temp = str1[b+1:]
+        
+            return to_ret
 
     def find_movies_by_title(self, title):
         """ Given a movie title, return a list of indices of matching movies.
@@ -481,7 +517,7 @@ class Chatbot:
         if len(movies) == 0:
             sentiment = self.extract_sentiment(preprocessed_input)
             res.append((title, sentiment))
-        elif len(movies) == 1 or re.search(r"(both|and|either|neither)", preprocessed_input):
+        elif len(movies) == 1 or re.search(r"(both|and)", preprocessed_input):
             sentiment = self.extract_sentiment(preprocessed_input)
             for title in movies:
                 res.append((title, sentiment))
