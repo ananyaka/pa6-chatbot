@@ -33,9 +33,6 @@ class Chatbot:
         self.num_reccs = 0
         self.started = False 
         self.total_reccs_poss = 10
-        self.mid_question = False
-        self.creative_sentiment = 0
-        self.creative_movie = ""
         ########################################################################
         # TODO: Binarize the movie ratings matrix.                             #
         ########################################################################
@@ -64,7 +61,7 @@ class Chatbot:
         # TODO: Write a short greeting message                                 #
         ########################################################################
 
-        greeting_message = "Hi! How can I help you?"
+        greeting_message = "How can I help you?"
 
         ########################################################################
         #                             END OF YOUR CODE                         #
@@ -79,7 +76,7 @@ class Chatbot:
         # TODO: Write a short farewell message                                 #
         ########################################################################
  
-        goodbye_message = "It was lovely chatting with you. Have a nice day!"
+        goodbye_message = "Have a nice day!"
 
         ########################################################################
         #                          END OF YOUR CODE                            #
@@ -117,56 +114,24 @@ class Chatbot:
         # code in a modular fashion to make it easier to improve and debug.    #
         ########################################################################
         if self.creative:
-            yes = ["yes", "yeah", "yep", "yup", "sure", "ya"]
-            no = ["no", "nah","nope", "negative", "neh"]
-            neg_acknowledgement = ["I see", "Okay", "Hmm", "Got it", "Alright"]
-            rand_neg_acknowledge = neg_acknowledgement[random.randint(0,len(neg_acknowledgement)-1)]
-
-            dislike = ["didn't like", "weren't a fan of", "disliked", "didn't enjoy", "weren't fond of"]
-            rand_dislike = dislike[random.randint(0,len(dislike)-1)]
-
-            pos_acknowledgement = ["I see", "Cool", "Awesome", "Got it", "Okay"]
-            rand_pos_acknowledge = pos_acknowledgement[random.randint(0,len(pos_acknowledgement)-1)]
-
-            like = ["liked", "were a fan of", "liked watching", "enjoyed", "thought well of", "enjoyed watching"]
-            rand_like = like[random.randint(0,len(like)-1)]
-            if len(self.movies_rated) < 5 and self.num_reccs == 0:
-                if (self.mid_question == False):
-                    self.creative_sentiment = self.extract_sentiment(line)
-                    title_close = self.extract_titles(line)
-                    title_indice = self.find_movies_closest_to_title(str(title_close[0]))
-                    response = "Did you mean " + self.titles[title_indice[0]][0] + "?"
-                    self.creative_movie = self.titles[title_indice[0]][0]
-                    self.mid_question = True
-                else:
-                    temp_list = list(line.lower().split(" "))
-                    if any(item in yes for item in temp_list):
-                        if self.creative_sentiment >= 1:
-                            response = rand_pos_acknowledge + ",you " + rand_like + " \"{}\"! ".format(self.creative_movie)
-                        elif self.creative_sentiment <= -1:
-                            response = rand_neg_acknowledge + ",you " + rand_dislike + " \"{}\"! ".format(self.creative_movie)
-                        self.mid_question = False
-                        self.movies_rated += 1
-                    elif any(item in no for item in temp_list):
-                        response = "I am unable to find a title close to what you types. Can you type that again for me please?"
-                        self.mid_question = False
-
-
-
-
-
-            
+            response = "I processed {} in creative mode!!".format(line)
 
 
         else:  # STARTER MODE:
             # if not self.started:
             #     response += self.greeting()
 
-            response = "I'm sorry, I'm not sure I understood that. If you are describing a movie, it'd be great if you could put it in quotes \" \" so I make sure I understand what you mean! Let's discuss movies, one at a time :)"
+            catch_all_response = ["I'm sorry, I'm not sure I understood that. If you are describing a movie, " \
+                                    "it'd be great if you could put it in quotes ("") so I make sure I understand " \
+                                    "what you mean! Let's discuss movies, one at a time :)", 
+                                    "Hm, that's not really what I want to talk about right now, let's go back to movies.", 
+                                    "Ok, got it.", 
+                                    "That's interesting, but let's focus on movies."]
+            response = catch_all_response[random.randint(0,len(catch_all_response)-1)]
 
-            yes = ["yes", "yeah", "yep", "yup", "sure", "ya"]
-            no = ["no", "nah","nope", "negative", "neh"]
-
+            yes = ["Yes", "yes", "Yeah", "yeah", "Yep", "yep", "Yup", "yup"]
+            no = ["No", "no", "Nah", "nah", "Nope", "nope", "Negative", "negative"]
+            
             if len(self.movies_rated) < 5 and self.num_reccs == 0: 
                 ask = ["Can you tell me how you felt about another movie?",
                         "Tell me what you thought of another movie.",
@@ -178,7 +143,15 @@ class Chatbot:
                 rand_ask = ask[random.randint(0,len(ask)-1)]
 
                 titles = self.extract_titles(line)
-                if len(titles) == 1:
+
+                if line.lower().startswith("can you"): # responding to arbitrary input (Rubric: Bot has strategies for processing some types of user input)
+                    response = "I can recommend movies to you. Tell me what you thought of any movie!"
+                elif line.lower().startswith("what is") or line.lower().startswith("what's"):
+                    response = "I'm not sure. You can look for the answer elsewhere and come back when you'd like a movie recommendation!"
+                elif (line.lower().startswith("how") or line.lower().startswith("who")) and line.lower().endswith("?"):
+                    response = "Good question. I'm just a movie recommender robot, though, so let's go back to telling me your thoughts about different movies."
+
+                elif len(titles) == 1:
                     title = titles[0]
                     movie_indices = self.find_movies_by_title(title)
 
@@ -224,23 +197,15 @@ class Chatbot:
                         if len(self.movies_rated) < 5 and sentiment != 0:
                             response += rand_ask
 
-                    else:
-                        confused = ["I don't think I know", "I haven't heard of"]
-                        rand_confused = confused[random.randint(0,len(confused)-1)]
-
-                        asking_for_another = ["sorry...Tell me about another movie you liked.", "how about you tell me about another movie? "]
-                        rand_asking_for_another = asking_for_another[random.randint(0,len(asking_for_another)-1)]
-                        
-                        response = rand_confused +  " \"{}\", ".format(title)  + rand_asking_for_another
-
                     # else: #TODO: if a movie is provided in quotes, but not in our dataset
 
                 elif len(titles) > 1: #if more than 1 movie was mentioned
-                    response = "I'm sorry, since I'm in Starter mode, I only have the capacity to understand one movie at a time, unfortunately. I'd really appreciate if you could list the movies you mentioned with one movie per line. Thank you!"
-
+                    response = "I'm sorry, since I'm in Starter mode, I only have the capacity to understand one " \
+                                "movie at a time, unfortunately. I'd really appreciate if you could list the " \
+                                "movies you mentioned with one movie per line. Thank you!"
 
             #start giving recommendations -- TODO: BUGGY, fix!
-            if len(self.movies_rated) == 5:
+            if len(self.movies_rated) >= 5:
                 user_ratings = []  # list: gets all indices of users ratings that != 0, and fills with 0s for non-rated
                 for i in range(len(self.ratings)):
                     if i in self.movies_rated:
@@ -255,22 +220,17 @@ class Chatbot:
                     response += "\nWould you like more recommendations?"
                     self.num_reccs += 1
 
-                elif self.num_reccs < self.total_reccs_poss :
-                    temp_list = list(line.lower().split(" "))
-                    if any(item in yes for item in temp_list) and any(item in no for item in temp_list): 
+                elif self.num_reccs < self.total_reccs_poss:
+                    if any(item in yes for item in line) and any(item in no for item in line): 
                         response = "I'm sorry, I didn't quite understand. Would you like more recommendations?"
-                    elif any(item in yes for item in temp_list):
-                        yes_more = ["Sure! I would also recommend", "I think you would also like", "I feel you would also enjoy", "I think you will have a good time watching"]
-                        rand_yes_more = yes_more[random.randint(0,len(yes_more)-1)]
-                        print(len(self.titles[recc_idx[self.num_reccs]]))
-                        response =  rand_yes_more +  " \""+ self.titles[recc_idx[self.num_reccs]][0] + "\"!"
+                    elif any(item in yes for item in line):
+                        response = "Sure! I would also recommend " + recc + "\"!"
                         response += "\nWould you like more recommendations?"
                         self.num_reccs += 1
-                    elif any(item in no for item in temp_list):
+                    elif any(item in no for item in line): 
                         response = self.goodbye()
                         
-                #elif self.num_reccs == self.total_reccs_poss:
-                else:
+                elif self.num_reccs == self.total_reccs_poss:
                     response = "Actually, I've given you {} movie recommendations above, ".format(self.total_reccs_poss)
                     response += '''I'm sure there must be at least one new movie to try! I don't have more recommendations for now, but 
                                     feel free to come back soon with new reviews! Thanks for chatting with me today!'''
@@ -339,7 +299,7 @@ class Chatbot:
         """
         to_ret = [] 
 
-        if self.creative and (not '"' in preprocessed_input):
+        if self.creative:
         #title = 'I thought 10 things i hate about you was great'
         #titles_set = ["10 Things I Hate About You (1999)"]
             matches = []
@@ -556,14 +516,13 @@ class Chatbot:
         # if "Ex Machina" in preprocessed_input:
         #     print(preprocessed_input, "weight:", weight, "num_pos:", num_pos, "num_neg:", num_neg, end=" sentiment ")
         
-        sentiment = -1 * weight if (num_neg % 2 == 1 and num_pos < 3*num_neg) or foundNegative else weight
+        sentiment = -1 * weight if (num_neg % 2 == 1 and weight*num_pos < 3) or foundNegative else weight
         sentiment = 0 if num_neg == num_pos == 0 and not foundNegative else sentiment
         # print(sentiment)
         # print(num_pos, weight, sentiment, clamp(sentiment))
         # if "Ex Machina" in preprocessed_input:
         return clamp(sentiment)
-
-
+        
     def extract_sentiment_for_movies(self, preprocessed_input):
         """Creative Feature: Extracts the sentiments from a line of
         pre-processed text that may contain multiple movies. Note that the
@@ -585,33 +544,16 @@ class Chatbot:
         :returns: a list of tuples, where the first item in the tuple is a movie
         title, and the second is the sentiment in the text toward that movie
         """
-        def get_movies(preprocessed_input):
-            to_ret = []
-            str1 = preprocessed_input
-            temp = str1
-            while(True):
-                str1 = temp
-                a = str1.find('"')
-                if (a == -1):
-                    break
-                for i in range(a+1, len(str1)):
-                    if (str1[i] == '"'):
-                        b = i 
-                        break
-                to_ret.append(str1[a+1:b])
-                temp = str1[b+1:]
-            return to_ret
-
         res = []
-        movies = get_movies(preprocessed_input)
+        movies = self.extract_titles(preprocessed_input)
         sentiment = self.extract_sentiment(preprocessed_input)
 
-        preprocessed_input = preprocessed_input.replace("but", "")
-        preprocessed_input = preprocessed_input.replace("however", "")
+        text_list = preprocessed_input.split()
+
         if len(movies) == 0:
             sentiment = self.extract_sentiment(preprocessed_input)
             res.append((title, sentiment))
-        elif len(movies) == 1 or re.search(r"(both|and|neither|either)", preprocessed_input):
+        elif len(movies) == 1 or re.search(r"(both|and|either|neither)", preprocessed_input):
             sentiment = self.extract_sentiment(preprocessed_input)
             for title in movies:
                 res.append((title, sentiment))
