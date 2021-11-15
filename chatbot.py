@@ -378,7 +378,7 @@ class Chatbot:
                                     "what you mean! Let's discuss movies, one at a time :)", 
                                     "Hm, that's not really what I want to talk about right now, let's go back to movies.", 
                                     "Ok, got it.", 
-                                    "That's nice to know, how about you tell me about some movies you've recently seen?"
+                                    "That's nice to know, how about you tell me about some movies you've recently seen?",
                                     "That's interesting, but let's focus on movies."]
         response = random.choice(catch_all_response)
 
@@ -1311,13 +1311,15 @@ class Chatbot:
         Consider adding to this description any information about what your
         chatbot can do and how the user can interact with it.
         """
-        return """
+        '''
         Your task is to implement the chatbot as detailed in the PA6
         instructions.
         Remember: in the starter mode, movie names will come in quotation marks
         and expressions of sentiment will be simple!
         TODO: Write here the description for your own chatbot!
-        """
+        '''
+        return "Welcome to the GCMA (Grace, Clinton, Michelle, Ananya) Bot! Let's talk movies!"
+
 
 
 if __name__ == '__main__':
