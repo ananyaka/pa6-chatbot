@@ -536,7 +536,7 @@ class Chatbot:
         """
         to_ret = [] 
 
-        if self.creative:
+        if self.creative and (not '"' in preprocessed_input):
         #title = 'I thought 10 things i hate about you was great'
         #titles_set = ["10 Things I Hate About You (1999)"]
             matches = []
@@ -554,7 +554,7 @@ class Chatbot:
                     else:
                         matches.append(titles[0][:len(titles[0])-7].lower())
     
-                title_pattern = f"\\b{titles[0]}\\b"
+                #title_pattern = f"\\b{titles[0]}\\b"
             #print(matches)
 
             res = [preprocessed_input[i: j] for i in range(len(preprocessed_input)) 
@@ -921,6 +921,11 @@ class Chatbot:
         for i, source in enumerate((self.titles)):
             source_lowercase = source[0].lower()
             source_size = len(source[0])
+            if ',' in source_lowercase:
+                temp = source_lowercase[:len(source_lowercase)-7]
+                index = temp.index(',')
+                to_add = temp[index+1:].lower() + ' ' + temp[:index].lower() + ' ' + source_lowercase[-6:]
+                source_lowercase = to_add
 
             edit_dist = self.find_edit_dist(source_lowercase, title_lowercase)
 
