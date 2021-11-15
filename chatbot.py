@@ -374,7 +374,7 @@ class Chatbot:
                                     "what you mean! Let's discuss movies, one at a time :)", 
                                     "Hm, that's not really what I want to talk about right now, let's go back to movies.", 
                                     "Ok, got it.", 
-                                    "That's nice to know, how about you tell me about some movies you've recently seen?"
+                                    "That's nice to know, how about you tell me about some movies you've recently seen?",
                                     "That's interesting, but let's focus on movies."]
         response = catch_all_response[random.randint(0,len(catch_all_response)-1)]
 
@@ -517,7 +517,7 @@ class Chatbot:
                 if any(item in yes for item in temp_list) and any(item in no for item in temp_list):
                     response = "I'm sorry, I didn't quite understand. Would you like more recommendations?"
                 '''
-                if any(item in yes for item in temp_list) and not ny(item in no for item in temp_list):
+                if any(item in yes for item in temp_list) and not any(item in no for item in temp_list):
                     yes_more = ["Sure! I would also recommend", "I think you would also like", "I feel you would also enjoy", "I think you will have a good time watching"]
                     rand_yes_more = yes_more[random.randint(0,len(yes_more)-1)]
                     # print(len(self.titles[recc_idx[self.num_reccs]]))
@@ -1321,13 +1321,15 @@ class Chatbot:
         Consider adding to this description any information about what your
         chatbot can do and how the user can interact with it.
         """
-        return """
+        '''
         Your task is to implement the chatbot as detailed in the PA6
         instructions.
         Remember: in the starter mode, movie names will come in quotation marks
         and expressions of sentiment will be simple!
         TODO: Write here the description for your own chatbot!
-        """
+        '''
+        return "Welcome to the GCMA (Grace, Clinton, Michelle, Ananya) Bot! Let's talk movies!"
+
 
 
 if __name__ == '__main__':
