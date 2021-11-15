@@ -90,6 +90,7 @@ class Chatbot:
     # 2. Modules 2 and 3: extraction and transformation                        #
     ############################################################################
 
+
     def process(self, line):
         """Process a line of input from the REPL and generate a response.
 
@@ -116,6 +117,16 @@ class Chatbot:
         # directly based on how modular it is, we highly recommended writing   #
         # code in a modular fashion to make it easier to improve and debug.    #
         ########################################################################
+        def verify(line):
+            quotes = 0
+            for ch in line:
+                if ch == '"':
+                    quotes += 1
+            return quotes % 2 == 0
+
+        if not verify(line):
+            return "I don't understand your input. Could try again? Check your quotes :)"
+
         def is_happy(line):
             happy_words = set(["happy", "joy", "like", "love", "good", "great", "moon", "grin", "buzzed", "hyped"])
             words = line.split()
