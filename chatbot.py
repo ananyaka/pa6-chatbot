@@ -64,7 +64,7 @@ class Chatbot:
         # TODO: Write a short greeting message                                 #
         ########################################################################
 
-        greeting_message = "How can I help you?"
+        greeting_message = "Greetings! How can I help you? I love chatting about movies :)"
 
         ########################################################################
         #                             END OF YOUR CODE                         #
@@ -79,7 +79,7 @@ class Chatbot:
         # TODO: Write a short farewell message                                 #
         ########################################################################
  
-        goodbye_message = "Have a nice day!"
+        goodbye_message = "It was great chatting with you! Have a nice day!"
 
         ########################################################################
         #                          END OF YOUR CODE                            #
@@ -370,14 +370,15 @@ class Chatbot:
         # # STARTER MODE:
 
         catch_all_response = ["I'm sorry, I'm not sure I understood that. If you are describing a movie, " \
-                                    "it'd be great if you could put it in quotes ("") so I make sure I understand " \
+                                    "it'd be great if you could put it in quotes \" \" so I make sure I understand " \
                                     "what you mean! Let's discuss movies, one at a time :)", 
                                     "Hm, that's not really what I want to talk about right now, let's go back to movies.", 
                                     "Ok, got it.", 
+                                    "That's nice to know, how about you tell me about some movies you've recently seen?"
                                     "That's interesting, but let's focus on movies."]
         response = catch_all_response[random.randint(0,len(catch_all_response)-1)]
 
-        yes = ["Yes", "yes", "Yeah", "yeah", "Yep", "yep", "Yup", "yup", "ya"]
+        yes = ["Yes", "yes", "Yeah", "yeah", "Yep", "yep", "Yup", "yup", "ya", "sure"]
         no = ["No", "no", "Nah", "nah", "Nope", "nope", "Negative", "negative"]
         
         if (self.creative_sentiment == 0 or self.creative_sentiment) and line in no:
@@ -512,17 +513,23 @@ class Chatbot:
             elif self.num_reccs < self.total_reccs_poss:
                 recc = self.titles[recc_idx[self.num_reccs]][0]
                 temp_list = list(line.lower().split(" "))
+                '''
                 if any(item in yes for item in temp_list) and any(item in no for item in temp_list):
                     response = "I'm sorry, I didn't quite understand. Would you like more recommendations?"
-                elif any(item in yes for item in temp_list):
+                '''
+                if any(item in yes for item in temp_list) and not ny(item in no for item in temp_list):
                     yes_more = ["Sure! I would also recommend", "I think you would also like", "I feel you would also enjoy", "I think you will have a good time watching"]
                     rand_yes_more = yes_more[random.randint(0,len(yes_more)-1)]
                     # print(len(self.titles[recc_idx[self.num_reccs]]))
                     response = rand_yes_more + " \""+ self.titles[recc_idx[self.num_reccs]][0] + "\"!"
                     response += "\nWould you like more recommendations?"
                     self.num_reccs += 1
-                elif any(item in no for item in temp_list): 
+                    self.mid_question = True
+                elif any(item in no for item in temp_list) and not any(item in yes for item in temp_list):
                     response = self.goodbye()
+                    self.mid_question = True
+                else:
+                    response = "I'm sorry, I didn't quite understand. Would you like more recommendations?"
 
             # self.num_reccs == self.total_reccs_poss:
             else:
