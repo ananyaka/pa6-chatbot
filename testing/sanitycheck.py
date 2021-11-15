@@ -182,7 +182,6 @@ def test_extract_sentiment():
         ('I really enjoyed "Titanic (1997)".', 1),
         ('"Titanic (1997)" started out terrible, but the ending was totally '
          'great and I loved it!', 1),
-        ('I loved "10 Things I Hate About You"', 1),
     ]
 
     tests_passed = True

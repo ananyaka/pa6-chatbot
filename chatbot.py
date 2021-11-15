@@ -27,7 +27,7 @@ class Chatbot:
         self.sentiment = util.load_sentiment_dictionary('data/sentiment.txt')
         self.negations = self.load_negations('deps/negations.txt')
         self.intensifiers = {'loved', 'love', 'incredible', 'really', 'very', 'hate', 'hated', 'favorite',
-        'worst', 'amazing',  'best', 'terrible', 'absolutely', 'worse', 'awful', 'adore'}
+        'worst', 'amazing',  'best', 'terrible', 'absolutely', 'worse', 'awful', 'adore', 'so'}
         self.minWordLength = 3
         self.movies_rated = {}
         self.num_reccs = 0
@@ -113,115 +113,305 @@ class Chatbot:
         # directly based on how modular it is, we highly recommended writing   #
         # code in a modular fashion to make it easier to improve and debug.    #
         ########################################################################
-        if self.creative:
-            response = "I processed {} in creative mode!!".format(line)
+        def is_happy(line):
+            happy_words = set(["happy", "joy", "like", "love", "good", "great"])
+            words = line.split()
+            happy = False
+            foundNegative = False
+            for word in words:
+                if word in self.negations:
+                    foundNegative = True
+                    break
+            
+            for word in words:
+                if word in happy_words:
+                    happy = True
+                    break
 
+            if not foundNegative and happy:
+                return "happy"
+            if foundNegative and happy:
+                return "sad"
 
-        else:  # STARTER MODE:
-            # if not self.started:
-            #     response += self.greeting()
+            return "not happy"
+        
+        def is_sad(line):
+            sad_words = set(["sad", "hate", "terrible"])
+            words = line.split()
+            sad = False
+            foundNegative = False
+            for word in words:
+                if word in self.negations:
+                    foundNegative = True
+                    break
+            
+            for word in words:
+                if word in sad_words:
+                    sad = True
+                    break
 
-            response = "I'm sorry, I'm not sure I understood that. If you are describing a movie, \
-                        it'd be great if you could put it in quotes ("") so I make sure I understand \
-                        what you mean! Let's discuss movies, one at a time :)"
+            if not foundNegative and sad:
+                return "sad"
+            if foundNegative and sad:
+                return "happy"
+            return "not sad"
 
-            yes = ["Yes", "yes", "Yeah", "yeah", "Yep", "yep", "Yup", "yup"]
-            no = ["No", "no", "Nah", "nah", "Nope", "nope", "Negative", "negative"]
+        def is_angry(line):
+            angry_words = set(["angry", "mad", "pissed"])
+            words = line.split()
+            angry = False
+            foundNegative = False
+            for word in words:
+                if word in self.negations:
+                    foundNegative = True
+                    break
+            
+            for word in words:
+                if word in angry_words:
+                    angry = True
+                    break
 
-            if len(self.movies_rated) < 5 and self.num_reccs == 0: 
-                ask = ["Can you tell me how you felt about another movie?",
-                        "Tell me what you thought of another movie.",
-                        "What about another movie?",
-                        "What are your thoughts on another movie?",
-                        "Besides that, can you tell me what you thought of another movie?",
-                        "What's another movie you have thoughts on?",
-                        "Can you tell me your reaction to another movie?"]
-                rand_ask = ask[random.randint(0,len(ask)-1)]
+            if not foundNegative and angry:
+                return "angry"
+            return "not angry"
+            
+        def is_terrified(line):
+            terrified_words = set(["angry", "mad", "pissed"])
+            words = line.split()
+            terrified = False
+            foundNegative = False
+            for word in words:
+                if word in self.negations:
+                    foundNegative = True
+                    break
+            
+            for word in words:
+                if word in terrified_words:
+                    terrified = True
+                    break
 
-                titles = self.extract_titles(line)
-                if len(titles) == 1:
-                    title = titles[0]
-                    movie_indices = self.find_movies_by_title(title)
+            if not foundNegative and terrified:
+                return "terrified"
+            return "not terrified"
+            
+        def is_amused(line):   
+            terrified_words = set(["angry", "mad", "pissed"])
+            words = line.split()
+            terrified = False
+            foundNegative = False
+            for word in words:
+                if word in self.negations:
+                    foundNegative = True
+                    break
+            
+            for word in words:
+                if word in terrified_words:
+                    terrified = True
+                    break
 
-                    if len(movie_indices) == 1: 
+            if not foundNegative and terrified:
+                return "amused"
+            return "not amused"
 
-                        sentiment = self.extract_sentiment(line)
-                        if sentiment <= -1:
-                            neg_acknowledgement = ["I see", "Okay", "Hmm", "Got it", "Alright"]
-                            rand_neg_acknowledge = neg_acknowledgement[random.randint(0,len(neg_acknowledgement)-1)]
+        def is_grateful(line):   
+            grateful_words = set(["thank"])
+            words = line.split()
+            grateful = False
+            foundNegative = False
+            for word in words:
+                if word in self.negations:
+                    foundNegative = True
+                    break
+            
+            for word in words:
+                if word in grateful_words:
+                    grateful = True
+                    break
 
-                            dislike = ["didn't like", "weren't a fan of", "disliked", "didn't enjoy", "weren't fond of"]
-                            rand_dislike = dislike[random.randint(0,len(dislike)-1)]
+            if not foundNegative and grateful:
+                return "grateful"
+            
+            if re.search(r'(good|great|amazing) (job|work)', line):
+                return "grateful"
+            return "not grateful"  
 
-                            response = rand_neg_acknowledge + ", you " + rand_dislike + " \"{}\". ".format(title) 
-                            
-                            if movie_indices[0] not in self.movies_rated:
-                                self.movies_rated[movie_indices[0]] = -1
+        def determine_emotion(line):
+            line = line.lower()
+            grateful_res = is_grateful(line)
+            if grateful_res != "not grateful":
+                return grateful_res
+            res = is_happy(line)
+            if res != "not happy":
+                return res
+            res = is_sad(line)
+            if res != "not sad":
+                return res
+            angry_res = is_angry(line)
+            if angry_res != "not angry":
+                return angry_res
+            terrified_res = is_terrified(line)
+            if terrified_res != "not terrified":
+                return terrified_res
+            amused_res = is_amused(line)
+            if amused_res != "not amused":
+                return amused_res
+            return "neutral"
 
-                        elif sentiment >= 1:
-                            pos_acknowledgement = ["I see", "Cool", "Awesome", "Got it", "Okay"]
-                            rand_pos_acknowledge = pos_acknowledgement[random.randint(0,len(pos_acknowledgement)-1)]
+        def parse_response_for_emotion(emotion):
+            happy_responses = [
+                "I'm glad I made your day!", 
+                "I'm happy you're happy!"
+            ]
+            sad_responses = [
+                "Oh I am so sorry! How can I make your day better?", 
+            "So sorryy! Is there anything I can do to help? I will do my best to find your movie!"
+            ]
+            angry_responses = [
+                "Oh did I make you angry? I apologize"
+            ]
+            terrified_responses = [
+                "Don't be scared buddy cos I got you!"
+            ]
+            amused_responses = [
+                "I get that a lot of time haha", 
+            "I know I can be funny sometimes :))"
+            ]
+            gratitude_responses = [
+                "I am so happy I can help!", 
+            "Happy to help! Do you need anything else?"
+            ]
+            neutral_responses = [
+               "Are you satisfied with my work? Give me a movie and I will help you"
+            ]
 
-                            like = ["liked", "were a fan of", "liked watching", "enjoyed", "thought well of", "enjoyed watching"]
-                            rand_like = like[random.randint(0,len(like)-1)]
+            if emotion == "happy":
+                return random.choice(happy_responses)
+            elif emotion == "sad":
+                return random.choice(sad_responses)
+            elif emotion == "angry":
+                return random.choice(angry_responses)
+            elif emotion == "terrified":
+                return random.choice(amused_responses)
+            elif emotion == "amused":
+                return random.choice(terrified_responses)
+            elif emotion == "grateful":
+                return random.choice(gratitude_responses)
+            return random.choice(neutral_responses)
 
-                            response = rand_pos_acknowledge + ", you " + rand_like + " \"{}\"! ".format(title) 
+        
+        titles = self.get_movies(line)
+        # user only expressing emotions. If there's a movie and we are in creative, pass on to starter mode code
+        if self.creative and len(titles) == 0:
+            emotion = determine_emotion(line)
+            return parse_response_for_emotion(emotion)        
 
-                            if movie_indices[0] not in self.movies_rated:
-                                self.movies_rated[movie_indices[0]] = 1
+        # if self.creative: # other creative features
+        #     return "No other creative features implemented. Sorry :(("
 
-                        elif sentiment == 0:
-                            neutral_acknowledgement = ["Hmm", "I'm sorry", "Sorry"]
-                            rand_neutral_acknowledge = neutral_acknowledgement[random.randint(0,len(neutral_acknowledgement)-1)]
+        # # STARTER MODE:
+            
 
-                            unsure = ["unsure whether", "not sure if", "not clear on whether", "not sure whether", "unsure if"]
-                            rand_unsure = unsure[random.randint(0,len(unsure)-1)]
+        response = "I'm sorry, I'm not sure I understood that. If you are describing a movie, \
+                    it'd be great if you could put it in quotes ("") so I make sure I understand \
+                    what you mean! Let's discuss movies, one at a time :)"
 
-                            clarify = ["What did you think of it?", "Tell me more about it.", "What were your thoughts on it?"]
-                            rand_clarify = clarify[random.randint(0,len(clarify)-1)]
+        yes = ["Yes", "yes", "Yeah", "yeah", "Yep", "yep", "Yup", "yup"]
+        no = ["No", "no", "Nah", "nah", "Nope", "nope", "Negative", "negative"]
 
-                            response = rand_neutral_acknowledge + ", I'm " + rand_unsure + " you liked \"{}\". ".format(title) + rand_clarify
-                
-                        if len(self.movies_rated) < 5 and sentiment != 0:
-                            response += rand_ask
+        if len(self.movies_rated) < 5 and self.num_reccs == 0: 
+            ask = ["Can you tell me how you felt about another movie?",
+                    "Tell me what you thought of another movie.",
+                    "What about another movie?",
+                    "What are your thoughts on another movie?",
+                    "Besides that, can you tell me what you thought of another movie?",
+                    "What's another movie you have thoughts on?",
+                    "Can you tell me your reaction to another movie?"]
+            rand_ask = ask[random.randint(0,len(ask)-1)]
 
-                    # else: #TODO: if a movie is provided in quotes, but not in our dataset
+            titles = self.extract_titles(line)
+            if len(titles) == 1:
+                title = titles[0]
+                movie_indices = self.find_movies_by_title(title)
 
-                elif len(titles) > 1: #if more than 1 movie was mentioned
-                    response = "I'm sorry, since I'm in Starter mode, I only have the capacity to understand one " \
-                                "movie at a time, unfortunately. I'd really appreciate if you could list the " \
-                                "movies you mentioned with one movie per line. Thank you!"
+                if len(movie_indices) == 1: 
 
-            #start giving recommendations -- TODO: BUGGY, fix!
-            if len(self.movies_rated) >= 5:
-                user_ratings = []  # list: gets all indices of users ratings that != 0, and fills with 0s for non-rated
-                for i in range(len(self.ratings)):
-                    if i in self.movies_rated:
-                        user_ratings.append(self.movies_rated[i])
-                    else:
-                        user_ratings.append(0)
+                    sentiment = self.extract_sentiment(line)
+                    if sentiment <= -1:
+                        neg_acknowledgement = ["I see", "Okay", "Hmm", "Got it", "Alright"]
+                        rand_neg_acknowledge = neg_acknowledgement[random.randint(0,len(neg_acknowledgement)-1)]
 
-                recc_idx = self.recommend(user_ratings, self.ratings, self.total_reccs_poss, False)
-                recc = self.titles[recc_idx[self.num_reccs]][0]
-                if self.num_reccs == 0: # give the first movie recommendation
-                    response += "\nThanks for your inputs! Given what you told me, I think you would like \"" + recc + "\"!"
+                        dislike = ["didn't like", "weren't a fan of", "disliked", "didn't enjoy", "weren't fond of"]
+                        rand_dislike = dislike[random.randint(0,len(dislike)-1)]
+
+                        response = rand_neg_acknowledge + ", you " + rand_dislike + " \"{}\". ".format(title) 
+                        
+                        if movie_indices[0] not in self.movies_rated:
+                            self.movies_rated[movie_indices[0]] = -1
+
+                    elif sentiment >= 1:
+                        pos_acknowledgement = ["I see", "Cool", "Awesome", "Got it", "Okay"]
+                        rand_pos_acknowledge = pos_acknowledgement[random.randint(0,len(pos_acknowledgement)-1)]
+
+                        like = ["liked", "were a fan of", "liked watching", "enjoyed", "thought well of", "enjoyed watching"]
+                        rand_like = like[random.randint(0,len(like)-1)]
+
+                        response = rand_pos_acknowledge + ", you " + rand_like + " \"{}\"! ".format(title) 
+
+                        if movie_indices[0] not in self.movies_rated:
+                            self.movies_rated[movie_indices[0]] = 1
+
+                    elif sentiment == 0:
+                        neutral_acknowledgement = ["Hmm", "I'm sorry", "Sorry"]
+                        rand_neutral_acknowledge = neutral_acknowledgement[random.randint(0,len(neutral_acknowledgement)-1)]
+
+                        unsure = ["unsure whether", "not sure if", "not clear on whether", "not sure whether", "unsure if"]
+                        rand_unsure = unsure[random.randint(0,len(unsure)-1)]
+
+                        clarify = ["What did you think of it?", "Tell me more about it.", "What were your thoughts on it?"]
+                        rand_clarify = clarify[random.randint(0,len(clarify)-1)]
+
+                        response = rand_neutral_acknowledge + ", I'm " + rand_unsure + " you liked \"{}\". ".format(title) + rand_clarify
+            
+                    if len(self.movies_rated) < 5 and sentiment != 0:
+                        response += rand_ask
+
+                # else: #TODO: if a movie is provided in quotes, but not in our dataset
+
+            elif len(titles) > 1: #if more than 1 movie was mentioned
+                response = "I'm sorry, since I'm in Starter mode, I only have the capacity to understand one " \
+                            "movie at a time, unfortunately. I'd really appreciate if you could list the " \
+                            "movies you mentioned with one movie per line. Thank you!"
+
+        #start giving recommendations -- TODO: BUGGY, fix!
+        if len(self.movies_rated) >= 5:
+            user_ratings = []  # list: gets all indices of users ratings that != 0, and fills with 0s for non-rated
+            for i in range(len(self.ratings)):
+                if i in self.movies_rated:
+                    user_ratings.append(self.movies_rated[i])
+                else:
+                    user_ratings.append(0)
+
+            recc_idx = self.recommend(user_ratings, self.ratings, self.total_reccs_poss, False)
+            recc = self.titles[recc_idx[self.num_reccs]][0]
+            if self.num_reccs == 0: # give the first movie recommendation
+                response += "\nThanks for your inputs! Given what you told me, I think you would like \"" + recc + "\"!"
+                response += "\nWould you like more recommendations?"
+                self.num_reccs += 1
+
+            elif self.num_reccs < self.total_reccs_poss:
+                if any(item in yes for item in line) and any(item in no for item in line): 
+                    response = "I'm sorry, I didn't quite understand. Would you like more recommendations?"
+                elif any(item in yes for item in line):
+                    response = "Sure! I would also recommend " + recc + "\"!"
                     response += "\nWould you like more recommendations?"
                     self.num_reccs += 1
-
-                elif self.num_reccs < self.total_reccs_poss:
-                    if any(item in yes for item in line) and any(item in no for item in line): 
-                        response = "I'm sorry, I didn't quite understand. Would you like more recommendations?"
-                    elif any(item in yes for item in line):
-                        response = "Sure! I would also recommend " + recc + "\"!"
-                        response += "\nWould you like more recommendations?"
-                        self.num_reccs += 1
-                    elif any(item in no for item in line): 
-                        response = self.goodbye()
-                        
-                elif self.num_reccs == self.total_reccs_poss:
-                    response = "Actually, I've given you {} movie recommendations above, ".format(self.total_reccs_poss)
-                    response += '''I'm sure there must be at least one new movie to try! I don't have more recommendations for now, but 
-                                    feel free to come back soon with new reviews! Thanks for chatting with me today!'''
+                elif any(item in no for item in line): 
+                    response = self.goodbye()
+                    
+            elif self.num_reccs == self.total_reccs_poss:
+                response = "Actually, I've given you {} movie recommendations above, ".format(self.total_reccs_poss)
+                response += '''I'm sure there must be at least one new movie to try! I don't have more recommendations for now, but 
+                                feel free to come back soon with new reviews! Thanks for chatting with me today!'''
             
 
         ########################################################################
@@ -461,7 +651,7 @@ class Chatbot:
 
         weight = 1.0
         if re.search("!+", preprocessed_input):
-            weight += 0.5
+            weight += 1
 
         num_pos = 0
         num_neg = 0
@@ -504,13 +694,33 @@ class Chatbot:
         # if "Ex Machina" in preprocessed_input:
         #     print(preprocessed_input, "weight:", weight, "num_pos:", num_pos, "num_neg:", num_neg, end=" sentiment ")
         
-        sentiment = -1 * weight if (num_neg % 2 == 1 and num_pos < 3*num_neg) or foundNegative else weight
+        sentiment = -1 * weight if (num_pos < 3*num_neg) or foundNegative else weight
+
+        if re.search(r'(but|however|although)', preprocessed_input):
+            sentiment = -1*sentiment
+
         sentiment = 0 if num_neg == num_pos == 0 and not foundNegative else sentiment
         # print(sentiment)
-        # print(num_pos, weight, sentiment, clamp(sentiment))
+        # print(preprocessed_input, num_pos, weight, sentiment, clamp(sentiment))
         # if "Ex Machina" in preprocessed_input:
         return clamp(sentiment)
 
+    def get_movies(self, preprocessed_input):
+        to_ret = []
+        str1 = preprocessed_input
+        temp = str1
+        while(True):
+            str1 = temp
+            a = str1.find('"')
+            if (a == -1):
+                break
+            for i in range(a+1, len(str1)):
+                if (str1[i] == '"'):
+                    b = i 
+                    break
+            to_ret.append(str1[a+1:b])
+            temp = str1[b+1:]
+        return to_ret
 
     def extract_sentiment_for_movies(self, preprocessed_input):
         """Creative Feature: Extracts the sentiments from a line of
@@ -533,29 +743,14 @@ class Chatbot:
         :returns: a list of tuples, where the first item in the tuple is a movie
         title, and the second is the sentiment in the text toward that movie
         """
-        def get_movies(preprocessed_input):
-            to_ret = []
-            str1 = preprocessed_input
-            temp = str1
-            while(True):
-                str1 = temp
-                a = str1.find('"')
-                if (a == -1):
-                    break
-                for i in range(a+1, len(str1)):
-                    if (str1[i] == '"'):
-                        b = i 
-                        break
-                to_ret.append(str1[a+1:b])
-                temp = str1[b+1:]
-            return to_ret
 
         res = []
-        movies = get_movies(preprocessed_input)
+        movies = self.get_movies(preprocessed_input)
         sentiment = self.extract_sentiment(preprocessed_input)
-
+    
         preprocessed_input = preprocessed_input.replace("but", "")
         preprocessed_input = preprocessed_input.replace("however", "")
+
         if len(movies) == 0:
             sentiment = self.extract_sentiment(preprocessed_input)
             res.append((title, sentiment))
@@ -572,8 +767,6 @@ class Chatbot:
                     curr = -1
                 sub_text = preprocessed_input[:curr]
                 sentiment = self.extract_sentiment(sub_text)
-                # print(preprocessed_input, ":::", sub_text, "   " ,sentiment)
-                # print("===========================")
                 prev = curr
                 res.append((title, sentiment))
         return res
