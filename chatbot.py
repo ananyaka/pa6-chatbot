@@ -266,7 +266,6 @@ class Chatbot:
 
             if not foundNegative and surprise:
                 return "grateful"
-
             return "not grateful"
 
         def determine_emotion(line):
@@ -317,7 +316,7 @@ class Chatbot:
             surprise_responses = [
                 "I have a few tricks under my sleeve!", 
             "Didn't think I was smart right?",
-            "Trust me with time I'll be as smart as you"
+            "Trust me, with time I'll be as smart as you"
             ]
 
             if emotion == "happy":
@@ -346,13 +345,19 @@ class Chatbot:
             like_phrases = ["You liked %s. ", "You loved %s. ", "You thought %s was good. "]
             dislike_phrases = ["You didn't like %s. ", "You disliked %s. ", "You thought %s was not good. "]
             neutral_phrases = ["You didn't have a strong opinion on %s"]
+            prev = -5
             for movie, sentiment in sentiments:
+                if prev == sentiment:
+                    results += "Also, "
+                else:
+                    results += "However, "
                 if sentiment < 0:
                     results += random.choice(dislike_phrases) % movie
                 elif sentiment > 0:
                     results += random.choice(like_phrases) % movie
                 else:
                     results += random.choice(neutral_phrases) % movie
+                prev = sentiment
             return results
 
         titles = self.get_movies(line)
@@ -376,7 +381,7 @@ class Chatbot:
                                     "Ok, got it.", 
                                     "That's nice to know, how about you tell me about some movies you've recently seen?"
                                     "That's interesting, but let's focus on movies."]
-        response = catch_all_response[random.randint(0,len(catch_all_response)-1)]
+        response = random.choice(catch_all_response)
 
         yes = ["Yes", "yes", "Yeah", "yeah", "Yep", "yep", "Yup", "yup", "ya", "sure"]
         no = ["No", "no", "Nah", "nah", "Nope", "nope", "Negative", "negative"]
@@ -397,7 +402,7 @@ class Chatbot:
                     "Besides that, can you tell me what you thought of another movie?",
                     "What's another movie you have thoughts on?",
                     "Can you tell me your reaction to another movie?"]
-            rand_ask = ask[random.randint(0,len(ask)-1)]
+            rand_ask = random.choice(ask)
 
             titles = self.extract_titles(line) if line not in yes or line not in no else [] 
 
@@ -420,10 +425,10 @@ class Chatbot:
                     self.creative_sentiment = None
                     if sentiment <= -1:
                         neg_acknowledgement = ["I see", "Okay", "Hmm", "Got it", "Alright"]
-                        rand_neg_acknowledge = neg_acknowledgement[random.randint(0,len(neg_acknowledgement)-1)]
+                        rand_neg_acknowledge = random.choice(neg_acknowledgement)
 
                         dislike = ["didn't like", "weren't a fan of", "disliked", "didn't enjoy", "weren't fond of"]
-                        rand_dislike = dislike[random.randint(0,len(dislike)-1)]
+                        rand_dislike = random.choice(dislike)
                         
                         response = rand_neg_acknowledge + ", you " + rand_dislike + " \"{}\"! ".format(title) \
                             if self.creative_movie == None else rand_neg_acknowledge + ", you " + rand_dislike + " \"{}\"! ".format(self.creative_movie)
@@ -436,10 +441,10 @@ class Chatbot:
 
                     elif sentiment >= 1:
                         pos_acknowledgement = ["I see", "Cool", "Awesome", "Got it", "Okay"]
-                        rand_pos_acknowledge = pos_acknowledgement[random.randint(0,len(pos_acknowledgement)-1)]
+                        rand_pos_acknowledge = random.choice(pos_acknowledgement)
 
                         like = ["liked", "were a fan of", "liked watching", "enjoyed", "thought well of", "enjoyed watching"]
-                        rand_like = like[random.randint(0,len(like)-1)]
+                        rand_like = random.choice(like)
 
                         response = rand_pos_acknowledge + ", you " + rand_like + " \"{}\"! ".format(title) \
                             if self.creative_movie == None else rand_pos_acknowledge + ", you " + rand_like + " \"{}\"! ".format(self.creative_movie)
@@ -455,12 +460,11 @@ class Chatbot:
                         rand_neutral_acknowledge = neutral_acknowledgement[random.randint(0,len(neutral_acknowledgement)-1)]
 
                         unsure = ["unsure whether", "not sure if", "not clear on whether", "not sure whether", "unsure if"]
-                        rand_unsure = unsure[random.randint(0,len(unsure)-1)]
+                        rand_unsure = random.choice(unsure)
 
                         clarify = ["What did you think of it?", "Tell me more about it.", "What were your thoughts on it?"]
-                        rand_clarify = clarify[random.randint(0,len(clarify)-1)]
+                        rand_clarify = random.choice(clarify)
 
-                        #response = rand_neutral_acknowledge + ", I'm " + rand_unsure + " you liked \"{}\". ".format(title) + rand_clarify
                         response = rand_neutral_acknowledge + ", I'm " + rand_unsure + " you liked \"{}\". ".format(title) + rand_clarify \
                             if self.creative_movie == None else rand_neutral_acknowledge + \
                             ", I'm " + rand_unsure + " you liked \"{}\". ".format(self.creative_movie) + rand_clarify
@@ -479,10 +483,10 @@ class Chatbot:
                         return response
                     else:
                         confused = ["I don't think I know", "I haven't heard of"]
-                        rand_confused = confused[random.randint(0,len(confused)-1)]
+                        rand_confused = random.choice(confused) 
 
                         asking_for_another = ["sorry...Tell me about another movie you liked.", "how about you tell me about another movie? "]
-                        rand_asking_for_another = asking_for_another[random.randint(0,len(asking_for_another)-1)]
+                        rand_asking_for_another = random.choice(asking_for_another)
 
                         response = rand_confused +  " \"{}\", ".format(title)  + rand_asking_for_another
 
@@ -517,10 +521,10 @@ class Chatbot:
                 if any(item in yes for item in temp_list) and any(item in no for item in temp_list):
                     response = "I'm sorry, I didn't quite understand. Would you like more recommendations?"
                 '''
-                if any(item in yes for item in temp_list) and not ny(item in no for item in temp_list):
+                if any(item in yes for item in temp_list) and not any(item in no for item in temp_list):
                     yes_more = ["Sure! I would also recommend", "I think you would also like", "I feel you would also enjoy", "I think you will have a good time watching"]
                     rand_yes_more = yes_more[random.randint(0,len(yes_more)-1)]
-                    # print(len(self.titles[recc_idx[self.num_reccs]]))
+
                     response = rand_yes_more + " \""+ self.titles[recc_idx[self.num_reccs]][0] + "\"!"
                     response += "\nWould you like more recommendations?"
                     self.num_reccs += 1
