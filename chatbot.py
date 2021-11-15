@@ -27,7 +27,7 @@ class Chatbot:
         self.sentiment = util.load_sentiment_dictionary('data/sentiment.txt')
         self.negations = self.load_negations('deps/negations.txt')
         self.intensifiers = {'loved', 'love', 'incredible', 'really', 'very', 'hate', 'hated', 'favorite',
-        'worst', 'amazing',  'best', 'terrible', 'absolutely', 'worse', 'awful', 'adore', 'so', 'happy', 'bad'}
+        'worst', 'amazing',  'best', 'terrible', 'absolutely', 'worse', 'awful', 'so', 'happy', 'bad'}
         self.minWordLength = 3
         self.movies_rated = {}
         self.num_reccs = 0
@@ -114,7 +114,7 @@ class Chatbot:
         # code in a modular fashion to make it easier to improve and debug.    #
         ########################################################################
         def is_happy(line):
-            happy_words = set(["happy", "joy", "like", "love", "good", "great"])
+            happy_words = set(["happy", "joy", "like", "love", "good", "great", "moon", "grin", "buzzed", "hyped"])
             words = line.split()
             happy = False
             foundNegative = False
@@ -136,7 +136,7 @@ class Chatbot:
             return "not happy"
         
         def is_sad(line):
-            sad_words = set(["sad", "hate", "terrible"])
+            sad_words = set(["sad", "hate", "terrible", "tears", "cry"])
             words = line.split()
             sad = False
             foundNegative = False
@@ -157,7 +157,7 @@ class Chatbot:
             return "not sad"
 
         def is_angry(line):
-            angry_words = set(["angry", "mad", "pissed"])
+            angry_words = set(["angry", "mad", "pissed", "upset", "bite", "furious", "livid", "crazy"])
             words = line.split()
             angry = False
             foundNegative = False
@@ -176,7 +176,7 @@ class Chatbot:
             return "not angry"
             
         def is_terrified(line):
-            terrified_words = set(["angry", "mad", "pissed"])
+            terrified_words = set(["scared", "haunted", "pissed", "beat", "danger"])
             words = line.split()
             terrified = False
             foundNegative = False
@@ -195,7 +195,7 @@ class Chatbot:
             return "not terrified"
             
         def is_amused(line):   
-            terrified_words = set(["angry", "mad", "pissed"])
+            terrified_words = set(["funny", "laugh", "laughter", "hilarious", "comedian", "laughing"])
             words = line.split()
             terrified = False
             foundNegative = False
@@ -214,7 +214,7 @@ class Chatbot:
             return "not amused"
 
         def is_grateful(line):   
-            grateful_words = set(["thank"])
+            grateful_words = set(["thank", "appreciate", "heart"])
             words = line.split()
             grateful = False
             foundNegative = False
@@ -233,7 +233,27 @@ class Chatbot:
             
             if re.search(r'(good|great|amazing) (job|work)', line):
                 return "grateful"
-            return "not grateful"  
+            return "not grateful" 
+
+        def is_surprised(line):   
+            surprise_words = set(["amazed", "shocked", "believe"])
+            words = line.split()
+            surprise = False
+            foundNegative = False
+            for word in words:
+                if word in self.negations:
+                    foundNegative = True
+                    break
+            
+            for word in words:
+                if word in surprise_words:
+                    surprise = True
+                    break
+
+            if not foundNegative and surprise:
+                return "grateful"
+
+            return "not grateful"
 
         def determine_emotion(line):
             line = line.lower()
@@ -280,8 +300,10 @@ class Chatbot:
                 "I am so happy I can help!", 
             "Happy to help! Do you need anything else?"
             ]
-            neutral_responses = [
-               "Are you satisfied with my work? Give me a movie and I will help you"
+            surprise_responses = [
+                "I have a few tricks under my sleeve!", 
+            "Didn't think I was smart right?",
+            "Trust me with time I'll be as smart as you"
             ]
 
             if emotion == "happy":
@@ -296,7 +318,9 @@ class Chatbot:
                 return random.choice(terrified_responses)
             elif emotion == "grateful":
                 return random.choice(gratitude_responses)
-            return random.choice(neutral_responses)
+            elif emotion == "surprise":
+                return random.choice(surprise_responses)
+            return ""
 
         def arbitrary(line):
             return line.lower().startswith("can you") or \
@@ -321,7 +345,9 @@ class Chatbot:
         # user only expressing emotions. If there's a movie and we are in creative, pass on to starter mode code
         if self.creative and len(titles) == 0 and not arbitrary(line):
             emotion = determine_emotion(line)
-            return parse_response_for_emotion(emotion)        
+            res = parse_response_for_emotion(emotion) 
+            if res != ""
+                return res       
 
         # if self.creative: # other creative features
         #     return "No other creative features implemented. Sorry :(("
