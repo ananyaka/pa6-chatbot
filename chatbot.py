@@ -298,10 +298,15 @@ class Chatbot:
                 return random.choice(gratitude_responses)
             return random.choice(neutral_responses)
 
+        def arbitrary(line):
+            return line.lower().startswith("can you") or \
+            line.lower().startswith("what is") or line.lower().startswith("what's") or \
+            (line.lower().startswith("how") or line.lower().startswith("who")) and line.lower().endswith("?")
+
         
         titles = self.get_movies(line)
         # user only expressing emotions. If there's a movie and we are in creative, pass on to starter mode code
-        if self.creative and len(titles) == 0:
+        if self.creative and len(titles) == 0 and not arbitrary(line):
             emotion = determine_emotion(line)
             return parse_response_for_emotion(emotion)        
 
@@ -311,9 +316,13 @@ class Chatbot:
         # # STARTER MODE:
             
 
-        response = "I'm sorry, I'm not sure I understood that. If you are describing a movie, \
-                    it'd be great if you could put it in quotes ("") so I make sure I understand \
-                    what you mean! Let's discuss movies, one at a time :)"
+        catch_all_response = ["I'm sorry, I'm not sure I understood that. If you are describing a movie, " \
+                                    "it'd be great if you could put it in quotes ("") so I make sure I understand " \
+                                    "what you mean! Let's discuss movies, one at a time :)", 
+                                    "Hm, that's not really what I want to talk about right now, let's go back to movies.", 
+                                    "Ok, got it.", 
+                                    "That's interesting, but let's focus on movies."]
+        response = catch_all_response[random.randint(0,len(catch_all_response)-1)]
 
         yes = ["Yes", "yes", "Yeah", "yeah", "Yep", "yep", "Yup", "yup"]
         no = ["No", "no", "Nah", "nah", "Nope", "nope", "Negative", "negative"]
@@ -329,7 +338,15 @@ class Chatbot:
             rand_ask = ask[random.randint(0,len(ask)-1)]
 
             titles = self.extract_titles(line)
-            if len(titles) == 1:
+
+            if line.lower().startswith("can you"): # responding to arbitrary input (Rubric: Bot has strategies for processing some types of user input)
+                response = "I can recommend movies to you. Tell me what you thought of any movie!"
+            elif line.lower().startswith("what is") or line.lower().startswith("what's"):
+                response = "I'm not sure. You can look for the answer elsewhere and come back when you'd like a movie recommendation!"
+            elif (line.lower().startswith("how") or line.lower().startswith("who")) and line.lower().endswith("?"):
+                response = "Good question. I'm just a movie recommender robot, though, so let's go back to telling me your thoughts about different movies."
+
+            elif len(titles) == 1:
                 title = titles[0]
                 movie_indices = self.find_movies_by_title(title)
 
@@ -754,7 +771,7 @@ class Chatbot:
         if len(movies) == 0:
             sentiment = self.extract_sentiment(preprocessed_input)
             res.append((title, sentiment))
-        elif len(movies) == 1 or re.search(r"(both|and|neither|either)", preprocessed_input):
+        elif len(movies) == 1 or re.search(r"(both|and|either|neither)", preprocessed_input):
             sentiment = self.extract_sentiment(preprocessed_input)
             for title in movies:
                 res.append((title, sentiment))
