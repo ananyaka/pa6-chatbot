@@ -416,7 +416,7 @@ class Chatbot:
                     "Can you tell me your reaction to another movie?"]
             rand_ask = ask[random.randint(0,len(ask)-1)]
 
-            titles = self.extract_titles(line)
+            titles = self.extract_titles(line) if line not in yes or line not in no else []
 
             if line.lower().startswith("can you"): # responding to arbitrary input (Rubric: Bot has strategies for processing some types of user input)
                 response = "I can recommend movies to you. Tell me what you thought of any movie!"
@@ -425,13 +425,15 @@ class Chatbot:
             elif (line.lower().startswith("how") or line.lower().startswith("who")) and line.lower().endswith("?"):
                 response = "Good question. I'm just a movie recommender robot, though, so let's go back to telling me your thoughts about different movies."
 
-            elif len(titles) == 1:
-                title = titles[0]
-                movie_indices = self.find_movies_by_title(title)
+            elif len(titles) == 1 or self.creative_sentiment != None:
+                if titles != []:
+                    title = titles[0]
+                    movie_indices = self.find_movies_by_title(title)
 
-                if len(movie_indices) == 1: 
+                if len(movie_indices) == 1 or self.creative_sentiment != None: 
 
-                    sentiment = self.extract_sentiment(line)
+                    sentiment = self.extract_sentiment(line) if self.creative_sentiment == None else self.creative_sentiment
+                    self.creative_sentiment = None
                     if sentiment <= -1:
                         neg_acknowledgement = ["I see", "Okay", "Hmm", "Got it", "Alright"]
                         rand_neg_acknowledge = neg_acknowledgement[random.randint(0,len(neg_acknowledgement)-1)]
@@ -475,12 +477,10 @@ class Chatbot:
                     title_close = self.extract_titles(line)
                     title_indice = self.find_movies_closest_to_title(str(title_close[0]))
                     if len(title_indice) > 0:
-                        if (self.mid_question == False):
-                            self.creative_sentiment = self.extract_sentiment(line)
-                            response = "Did you mean " + self.titles[title_indice[0]][0] + "?"
-                            self.creative_movie = self.titles[title_indice[0]][0]
-                            self.mid_question = True
-                            return response
+                        self.creative_sentiment = self.extract_sentiment(line)
+                        response = "Did you mean " + self.titles[title_indice[0]][0] + "?"
+                        self.creative_movie = self.titles[title_indice[0]][0]
+                        return response
                     else:
                         confused = ["I don't think I know", "I haven't heard of"]
                         rand_confused = confused[random.randint(0,len(confused)-1)]
