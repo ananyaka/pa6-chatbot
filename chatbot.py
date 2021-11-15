@@ -346,7 +346,7 @@ class Chatbot:
         if self.creative and len(titles) == 0 and not arbitrary(line):
             emotion = determine_emotion(line)
             res = parse_response_for_emotion(emotion) 
-            if res != ""
+            if res != "":
                 return res       
 
         # if self.creative: # other creative features
@@ -564,10 +564,8 @@ class Chatbot:
                 if r.lower() in matches:
                     #print(r)
                     to_ret.append(r)
-            return [max(to_ret, key = len).lower()]
-
-
-        
+            return [max(to_ret, key = len).lower()] if len(to_ret) != 0 else []
+             
         else:
             to_ret = []
             str1 = preprocessed_input
