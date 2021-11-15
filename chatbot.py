@@ -363,7 +363,6 @@ class Chatbot:
         titles = self.get_movies(line)
         # user only expressing emotions. If there's a movie and we are in creative, pass on to starter mode code
         if self.creative and len(titles) == 0 and not arbitrary(line):
-            print("entered")
             emotion = determine_emotion(line)
             res = parse_response_for_emotion(emotion) 
             if res != "":
@@ -383,8 +382,8 @@ class Chatbot:
                                     "That's interesting, but let's focus on movies."]
         response = random.choice(catch_all_response)
 
-        yes = ["Yes", "yes", "Yeah", "yeah", "Yep", "yep", "Yup", "yup", "ya", "sure"]
-        no = ["No", "no", "Nah", "nah", "Nope", "nope", "Negative", "negative"]
+        yes = ["Yes", "yes", "Yeah", "yeah", "Yep", "yep", "Yup", "yup", "ya", "sure", "y"]
+        no = ["No", "no", "Nah", "nah", "Nope", "nope", "Negative", "negative","n"]
         
         if (self.creative_sentiment == 0 or self.creative_sentiment) and line in no:
             self.creative_sentiment = None
@@ -523,7 +522,7 @@ class Chatbot:
                 '''
                 if any(item in yes for item in temp_list) and not any(item in no for item in temp_list):
                     yes_more = ["Sure! I would also recommend", "I think you would also like", "I feel you would also enjoy", "I think you will have a good time watching"]
-                    rand_yes_more = yes_more[random.randint(0,len(yes_more)-1)]
+                    rand_yes_more = random.choice(yes_more)
 
                     response = rand_yes_more + " \""+ self.titles[recc_idx[self.num_reccs]][0] + "\"!"
                     response += "\nWould you like more recommendations?"
@@ -734,16 +733,6 @@ class Chatbot:
                 return sub_str
         return ""
 
-    def apply_negation(self, sentiment, sentiments):
-        quote = False
-        for word in sentiments:
-            if '"' in word or quote:
-                quote = False if quote else True
-                continue
-            if word in self.negations:
-                return -1 if sentiment == 1 or sentiment == 0 else 1
-        return sentiment
-
     def extract_sentiment(self, preprocessed_input):
         """Extract a sentiment rating from a line of pre-processed text.
 
@@ -817,17 +806,13 @@ class Chatbot:
             if foundNegative:
                 foundNegative = False
         
-        # if "Ex Machina" in preprocessed_input:
-        #     print(preprocessed_input, "weight:", weight, "num_pos:", num_pos, "num_neg:", num_neg, end=" sentiment ")
         sentiment = -1 * weight if (num_pos < 3*num_neg) or foundNegative else weight
 
         if re.search(r'(but|however|although)', preprocessed_input):
             sentiment = -1*sentiment
 
         sentiment = 0 if num_neg == num_pos == 0 and not foundNegative else sentiment
-        # print(sentiment)
-        # print(preprocessed_input, num_pos, weight, sentiment, clamp(sentiment))
-        # if "Ex Machina" in preprocessed_input:
+        
         return clamp(sentiment)
 
     def get_movies(self, preprocessed_input):
@@ -872,9 +857,10 @@ class Chatbot:
         res = []
         movies = self.get_movies(preprocessed_input)
         sentiment = self.extract_sentiment(preprocessed_input)
-    
-        preprocessed_input = preprocessed_input.replace("but", "")
-        preprocessed_input = preprocessed_input.replace("however", "")
+
+        if len(movies > 1):
+            preprocessed_input = preprocessed_input.replace("but", "")
+            preprocessed_input = preprocessed_input.replace("however", "")
         
         if len(movies) == 0:
             sentiment = self.extract_sentiment(preprocessed_input)
