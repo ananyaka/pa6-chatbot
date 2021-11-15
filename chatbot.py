@@ -337,13 +337,14 @@ class Chatbot:
             dislike_phrases = ["You didn't like %s. ", "You disliked %s. ", "You thought %s was not good. "]
             neutral_phrases = ["You didn't have a strong opinion on %s"]
             for movie, sentiment in sentiments:
-                if sentiment == -1:
-                    result += random.choice(dislike_phrases) % movie
-                elif sentiment == 1:
-                    result += random.choice(like_phrases) % movie
+                if sentiment < 0:
+                    results += random.choice(dislike_phrases) % movie
+                elif sentiment > 0:
+                    results += random.choice(like_phrases) % movie
                 else:
-                    result += random.choice(neutral_phrases) % movie
-        
+                    results += random.choice(neutral_phrases) % movie
+            return results
+
         titles = self.get_movies(line)
         # user only expressing emotions. If there's a movie and we are in creative, pass on to starter mode code
         if self.creative and len(titles) == 0 and not arbitrary(line):
@@ -351,7 +352,8 @@ class Chatbot:
             res = parse_response_for_emotion(emotion) 
             if res != "":
                 return res 
-        elif self.creative:
+        
+        if self.creative and len(titles) >= 0 and len(self.find_movies_by_title(titles[0])) == 0:
             yes = ["yes", "yeah", "yep", "yup", "sure", "ya"]
             no = ["no", "nah","nope", "negative", "neh"]
             neg_acknowledgement = ["I see", "Okay", "Hmm", "Got it", "Alright"]
@@ -373,6 +375,7 @@ class Chatbot:
                     response = "Did you mean " + self.titles[title_indice[0]][0] + "?"
                     self.creative_movie = self.titles[title_indice[0]][0]
                     self.mid_question = True
+                    return response
                 else:
                     temp_list = list(line.lower().split(" "))
                     if any(item in yes for item in temp_list):
@@ -381,10 +384,11 @@ class Chatbot:
                         elif self.creative_sentiment <= -1:
                             response = rand_neg_acknowledge + ",you " + rand_dislike + " \"{}\"! ".format(self.creative_movie)
                         self.mid_question = False
-                        self.movies_rated += 1
+                        self.movies_rated += 1  
                     elif any(item in no for item in temp_list):
                         response = "I am unable to find a title close to what you types. Can you type that again for me please?"
-                        self.mid_question = False    
+                        self.mid_question = False
+                    return response
 
         # if self.creative: # other creative features
         #     return "No other creative features implemented. Sorry :(("
@@ -399,7 +403,7 @@ class Chatbot:
                                     "That's interesting, but let's focus on movies."]
         response = catch_all_response[random.randint(0,len(catch_all_response)-1)]
 
-        yes = ["Yes", "yes", "Yeah", "yeah", "Yep", "yep", "Yup", "yup"]
+        yes = ["Yes", "yes", "Yeah", "yeah", "Yep", "yep", "Yup", "yup", "ya"]
         no = ["No", "no", "Nah", "nah", "Nope", "nope", "Negative", "negative"]
 
         if len(self.movies_rated) < 5 and self.num_reccs == 0: 
@@ -467,7 +471,14 @@ class Chatbot:
                     if len(self.movies_rated) < 5 and sentiment != 0:
                         response += rand_ask
 
-                # else: #TODO: if a movie is provided in quotes, but not in our dataset
+                else: #if a movie is provided in quotes, but not in our dataset
+                    confused = ["I don't think I know", "I haven't heard of"]
+                    rand_confused = confused[random.randint(0,len(confused)-1)]
+
+                    asking_for_another = ["sorry...Tell me about another movie you liked.", "how about you tell me about another movie? "]
+                    rand_asking_for_another = asking_for_another[random.randint(0,len(asking_for_another)-1)]
+
+                    response = rand_confused +  " \"{}\", ".format(title)  + rand_asking_for_another
 
             elif len(titles) > 1: #if more than 1 movie was mentioned
                 if not self.creative:
@@ -478,7 +489,7 @@ class Chatbot:
                     response = generate_response_for_multiple_movies(line)
 
         #start giving recommendations --
-        if len(self.movies_rated) >= 5:
+        if len(self.movies_rated) == 5:
             user_ratings = []  # list: gets all indices of users ratings that != 0, and fills with 0s for non-rated
             for i in range(len(self.ratings)):
                 if i in self.movies_rated:
@@ -487,23 +498,29 @@ class Chatbot:
                     user_ratings.append(0)
 
             recc_idx = self.recommend(user_ratings, self.ratings, self.total_reccs_poss, False)
-            recc = self.titles[recc_idx[self.num_reccs]][0]
+        
             if self.num_reccs == 0: # give the first movie recommendation
+                recc = self.titles[recc_idx[self.num_reccs]][0]
                 response += "\nThanks for your inputs! Given what you told me, I think you would like \"" + recc + "\"!"
                 response += "\nWould you like more recommendations?"
                 self.num_reccs += 1
-
             elif self.num_reccs < self.total_reccs_poss:
-                if any(item in yes for item in line) and any(item in no for item in line): 
+                recc = self.titles[recc_idx[self.num_reccs]][0]
+                temp_list = list(line.lower().split(" "))
+                if any(item in yes for item in temp_list) and any(item in no for item in temp_list):
                     response = "I'm sorry, I didn't quite understand. Would you like more recommendations?"
-                elif any(item in yes for item in line):
-                    response = "Sure! I would also recommend " + recc + "\"!"
+                elif any(item in yes for item in temp_list):
+                    yes_more = ["Sure! I would also recommend", "I think you would also like", "I feel you would also enjoy", "I think you will have a good time watching"]
+                    rand_yes_more = yes_more[random.randint(0,len(yes_more)-1)]
+                    # print(len(self.titles[recc_idx[self.num_reccs]]))
+                    response = rand_yes_more + " \""+ self.titles[recc_idx[self.num_reccs]][0] + "\"!"
                     response += "\nWould you like more recommendations?"
                     self.num_reccs += 1
-                elif any(item in no for item in line): 
+                elif any(item in no for item in temp_list): 
                     response = self.goodbye()
-                    
-            elif self.num_reccs == self.total_reccs_poss:
+
+            # self.num_reccs == self.total_reccs_poss:
+            else:
                 response = "Actually, I've given you {} movie recommendations above, ".format(self.total_reccs_poss)
                 response += '''I'm sure there must be at least one new movie to try! I don't have more recommendations for now, but 
                                 feel free to come back soon with new reviews! Thanks for chatting with me today!'''
@@ -847,7 +864,7 @@ class Chatbot:
         if len(movies) == 0:
             sentiment = self.extract_sentiment(preprocessed_input)
             res.append((title, sentiment))
-        elif len(movies) == 1 or re.search(r"(both|and|either|neither)", preprocessed_input):
+        elif len(movies) == 1 or re.search(r"(both|either|neither)", preprocessed_input):
             sentiment = self.extract_sentiment(preprocessed_input)
             for title in movies:
                 res.append((title, sentiment))
@@ -860,6 +877,7 @@ class Chatbot:
                     curr = -1
                 sub_text = preprocessed_input[:curr]
                 sentiment = self.extract_sentiment(sub_text)
+                sentiment = sentiment if sentiment == 0 else sentiment / abs(sentiment)
                 prev = curr
                 res.append((title, sentiment))
         return res

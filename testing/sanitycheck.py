@@ -213,6 +213,8 @@ def test_extract_sentiment_for_movies():
          [("I, Robot", -1), ("Ex Machina", -1)]),
         ('I liked "Titanic (1997)", but "Ex Machina" was not good.',
          [("Titanic (1997)", 1), ("Ex Machina", -1)]),
+        ('I liked "Ex machina" and hate "Ex Machina".',
+         [("Ex machina", 1), ("Ex Machina", -1)]),
     ]
 
     tests_passed = True
