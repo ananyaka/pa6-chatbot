@@ -456,7 +456,7 @@ class Chatbot:
 
                     elif sentiment == 0:
                         neutral_acknowledgement = ["Hmm", "I'm sorry", "Sorry"]
-                        rand_neutral_acknowledge = neutral_acknowledgement[random.randint(0,len(neutral_acknowledgement)-1)]
+                        rand_neutral_acknowledge = random.choice(neutral_acknowledgement)
 
                         unsure = ["unsure whether", "not sure if", "not clear on whether", "not sure whether", "unsure if"]
                         rand_unsure = random.choice(unsure)
