@@ -337,10 +337,9 @@ class Chatbot:
             return ""
 
         def arbitrary(line):
-            return line.lower().startswith("can you") or \
-            line.lower().startswith("what is") or line.lower().startswith("what's") or \
-            (line.lower().startswith("how") or line.lower().startswith("who")) and line.lower().endswith("?")
-
+            return (line.lower().startswith("can you") or line.lower().startswith("what is") or \
+            line.lower().startswith("what's") or line.lower().startswith("who is")) and line.lower().endswith("?")
+             
         def generate_response_for_multiple_movies(line):
             sentiments = self.extract_sentiment_for_movies(line)
             results = ""
@@ -401,12 +400,12 @@ class Chatbot:
 
             titles = self.extract_titles(line) if line not in yes or line not in no else [] 
 
-            if line.lower().startswith("can you"): # responding to arbitrary input (Rubric: Bot has strategies for processing some types of user input)
-                response = "I can recommend movies to you. Tell me what you thought of any movie!"
-            elif line.lower().startswith("what is") or line.lower().startswith("what's"):
-                response = "I'm not sure. You can look for the answer elsewhere and come back when you'd like a movie recommendation!"
-            elif (line.lower().startswith("how") or line.lower().startswith("who")) and line.lower().endswith("?"):
-                response = "Good question. I'm just a movie recommender robot, though, so let's go back to telling me your thoughts about different movies."
+            if line.lower().startswith("can you") and line.lower().endswith("?"): # responding to arbitrary input (Rubric: Bot has strategies for processing some types of user input)
+                response = "I'm not sure if I can " + line[8:-1] + ". But I can recommend movies to you. Tell me what you thought of any movie!"
+            elif line.lower().startswith("what is") or line.lower().startswith("what's") and line.lower().endswith("?"):
+                response = "I'm not sure what " + line[8:-1] + " is. You can look for the answer elsewhere and come back when you'd like a movie recommendation!"
+            elif line.lower().startswith("who is") and line.lower().endswith("?"):
+                response = "I don't know who " + line[7:-1] + " is. Let's go back to telling me your thoughts about different movies."
 
             elif len(titles) == 1 or self.creative_sentiment != None:
                 movie_indices = []
