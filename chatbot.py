@@ -384,6 +384,9 @@ class Chatbot:
             self.creative_sentiment = None
             self.creative_movie = None
             return "Ok! tell me about another movie then!"
+        
+        if self.creative_sentiment and line not in yes:
+            return "Please answer yes/no"
 
         if len(self.movies_rated) < 5 and self.num_reccs == 0: 
             ask = ["Can you tell me how you felt about another movie?",
@@ -469,7 +472,7 @@ class Chatbot:
                     title_indice = self.find_movies_closest_to_title(str(title_close[0]))
                     if len(title_indice) > 0:
                         self.creative_sentiment = self.extract_sentiment(line)
-                        response = "Did you mean " + self.titles[title_indice[0]][0] + "?"
+                        response = "Did you mean \"" + self.titles[title_indice[0]][0] + "\"?"
                         self.creative_movie = self.titles[title_indice[0]][0]
                         return response
                     else:
