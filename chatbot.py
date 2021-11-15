@@ -27,7 +27,7 @@ class Chatbot:
         self.sentiment = util.load_sentiment_dictionary('data/sentiment.txt')
         self.negations = self.load_negations('deps/negations.txt')
         self.intensifiers = {'loved', 'love', 'incredible', 'really', 'very', 'hate', 'hated', 'favorite',
-        'worst', 'amazing',  'best', 'terrible', 'absolutely', 'worse', 'awful', 'adore', 'so'}
+        'worst', 'amazing',  'best', 'terrible', 'absolutely', 'worse', 'awful', 'adore', 'so', 'happy', 'bad'}
         self.minWordLength = 3
         self.movies_rated = {}
         self.num_reccs = 0
@@ -303,6 +303,19 @@ class Chatbot:
             line.lower().startswith("what is") or line.lower().startswith("what's") or \
             (line.lower().startswith("how") or line.lower().startswith("who")) and line.lower().endswith("?")
 
+        def generate_response_for_multiple_movies(line):
+            sentiments = self.extract_sentiment_for_movies(line)
+            results = ""
+            like_phrases = ["You liked %s. ", "You loved %s. ", "You thought %s was good. "]
+            dislike_phrases = ["You didn't like %s. ", "You disliked %s. ", "You thought %s was not good. "]
+            neutral_phrases = ["You didn't have a strong opinion on %s"]
+            for movie, sentiment in sentiments:
+                if sentiment == -1:
+                    result += random.choice(dislike_phrases) % movie
+                elif sentiment == 1:
+                    result += random.choice(like_phrases) % movie
+                else:
+                    result += random.choice(neutral_phrases) % movie
         
         titles = self.get_movies(line)
         # user only expressing emotions. If there's a movie and we are in creative, pass on to starter mode code
@@ -395,9 +408,12 @@ class Chatbot:
                 # else: #TODO: if a movie is provided in quotes, but not in our dataset
 
             elif len(titles) > 1: #if more than 1 movie was mentioned
-                response = "I'm sorry, since I'm in Starter mode, I only have the capacity to understand one " \
+                if not self.creative
+                    response = "I'm sorry, since I'm in Starter mode, I only have the capacity to understand one " \
                             "movie at a time, unfortunately. I'd really appreciate if you could list the " \
                             "movies you mentioned with one movie per line. Thank you!"
+                else:
+                    response = generate_response_for_multiple_movies(line)
 
         #start giving recommendations -- TODO: BUGGY, fix!
         if len(self.movies_rated) >= 5:
