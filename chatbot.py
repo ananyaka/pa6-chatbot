@@ -408,14 +408,14 @@ class Chatbot:
                 # else: #TODO: if a movie is provided in quotes, but not in our dataset
 
             elif len(titles) > 1: #if more than 1 movie was mentioned
-                if not self.creative
+                if not self.creative:
                     response = "I'm sorry, since I'm in Starter mode, I only have the capacity to understand one " \
                             "movie at a time, unfortunately. I'd really appreciate if you could list the " \
                             "movies you mentioned with one movie per line. Thank you!"
                 else:
                     response = generate_response_for_multiple_movies(line)
 
-        #start giving recommendations -- TODO: BUGGY, fix!
+        #start giving recommendations --
         if len(self.movies_rated) >= 5:
             user_ratings = []  # list: gets all indices of users ratings that != 0, and fills with 0s for non-rated
             for i in range(len(self.ratings)):
