@@ -128,7 +128,7 @@ class Chatbot:
             return "I don't understand your input. Could try again? Check your quotes :)"
 
         def is_happy(line):
-            happy_words = set(["happy", "joy", "like", "love", "good", "great", "moon", "grin", "buzzed", "hyped"])
+            happy_words = set(["happy", "joy", "love", "good", "great", "moon", "grin", "buzzed", "hyped"])
             words = line.split()
             happy = False
             foundNegative = False
@@ -359,6 +359,7 @@ class Chatbot:
         titles = self.get_movies(line)
         # user only expressing emotions. If there's a movie and we are in creative, pass on to starter mode code
         if self.creative and len(titles) == 0 and not arbitrary(line):
+            print("entered")
             emotion = determine_emotion(line)
             res = parse_response_for_emotion(emotion) 
             if res != "":
@@ -380,12 +381,12 @@ class Chatbot:
         yes = ["Yes", "yes", "Yeah", "yeah", "Yep", "yep", "Yup", "yup", "ya"]
         no = ["No", "no", "Nah", "nah", "Nope", "nope", "Negative", "negative"]
         
-        if self.creative_sentiment and line in no:
+        if (self.creative_sentiment == 0 or self.creative_sentiment) and line in no:
             self.creative_sentiment = None
             self.creative_movie = None
             return "Ok! tell me about another movie then!"
         
-        if self.creative_sentiment and line not in yes:
+        if (self.creative_sentiment == 0 or self.creative_sentiment) and line not in yes:
             return "Please answer yes/no"
 
         if len(self.movies_rated) < 5 and self.num_reccs == 0: 
@@ -398,7 +399,7 @@ class Chatbot:
                     "Can you tell me your reaction to another movie?"]
             rand_ask = ask[random.randint(0,len(ask)-1)]
 
-            titles = self.extract_titles(line) if line not in yes or line not in no else []
+            titles = self.extract_titles(line) if line not in yes or line not in no else [] 
 
             if line.lower().startswith("can you"): # responding to arbitrary input (Rubric: Bot has strategies for processing some types of user input)
                 response = "I can recommend movies to you. Tell me what you thought of any movie!"
@@ -472,6 +473,7 @@ class Chatbot:
                     title_indice = self.find_movies_closest_to_title(str(title_close[0]))
                     if len(title_indice) > 0:
                         self.creative_sentiment = self.extract_sentiment(line)
+                        print(self.creative_sentiment)
                         response = "Did you mean \"" + self.titles[title_indice[0]][0] + "\"?"
                         self.creative_movie = self.titles[title_indice[0]][0]
                         return response
