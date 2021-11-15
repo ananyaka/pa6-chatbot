@@ -415,7 +415,7 @@ class Chatbot:
                 else:
                     response = generate_response_for_multiple_movies(line)
 
-        #start giving recommendations -- TODO: BUGGY, fix!
+        #start giving recommendations --
         if len(self.movies_rated) >= 5:
             user_ratings = []  # list: gets all indices of users ratings that != 0, and fills with 0s for non-rated
             for i in range(len(self.ratings)):
