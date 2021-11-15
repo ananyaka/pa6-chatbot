@@ -370,10 +370,11 @@ class Chatbot:
         # # STARTER MODE:
 
         catch_all_response = ["I'm sorry, I'm not sure I understood that. If you are describing a movie, " \
-                                    "it'd be great if you could put it in quotes ("") so I make sure I understand " \
+                                    "it'd be great if you could put it in quotes \" \" so I make sure I understand " \
                                     "what you mean! Let's discuss movies, one at a time :)", 
                                     "Hm, that's not really what I want to talk about right now, let's go back to movies.", 
                                     "Ok, got it.", 
+                                    "That's nice to know, how about you tell me about some movies you've recently seen?"
                                     "That's interesting, but let's focus on movies."]
         response = catch_all_response[random.randint(0,len(catch_all_response)-1)]
 
