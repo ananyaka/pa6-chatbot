@@ -353,7 +353,7 @@ class Chatbot:
             if res != "":
                 return res 
         
-        if self.creative and len(titles) >= 0 and len(self.find_movies_by_title(titles[0])) == 0:
+        if self.creative and len(titles) >= 0:
             yes = ["yes", "yeah", "yep", "yup", "sure", "ya"]
             no = ["no", "nah","nope", "negative", "neh"]
             neg_acknowledgement = ["I see", "Okay", "Hmm", "Got it", "Alright"]
@@ -367,28 +367,30 @@ class Chatbot:
 
             like = ["liked", "were a fan of", "liked watching", "enjoyed", "thought well of", "enjoyed watching"]
             rand_like = like[random.randint(0,len(like)-1)]
-            if len(self.movies_rated) < 5 and self.num_reccs == 0:
-                if (self.mid_question == False):
-                    self.creative_sentiment = self.extract_sentiment(line)
-                    title_close = self.extract_titles(line)
-                    title_indice = self.find_movies_closest_to_title(str(title_close[0]))
-                    response = "Did you mean " + self.titles[title_indice[0]][0] + "?"
-                    self.creative_movie = self.titles[title_indice[0]][0]
-                    self.mid_question = True
-                    return response
-                else:
-                    temp_list = list(line.lower().split(" "))
-                    if any(item in yes for item in temp_list):
-                        if self.creative_sentiment >= 1:
-                            response = rand_pos_acknowledge + ",you " + rand_like + " \"{}\"! ".format(self.creative_movie)
-                        elif self.creative_sentiment <= -1:
-                            response = rand_neg_acknowledge + ",you " + rand_dislike + " \"{}\"! ".format(self.creative_movie)
-                        self.mid_question = False
-                        self.movies_rated += 1  
-                    elif any(item in no for item in temp_list):
-                        response = "I am unable to find a title close to what you types. Can you type that again for me please?"
-                        self.mid_question = False
-                    return response
+            if len(titles) > 0:
+                if len(self.find_movies_by_title(titles[0])) == 0:
+                    if len(self.movies_rated) < 5 and self.num_reccs == 0:
+                        if (self.mid_question == False):
+                            self.creative_sentiment = self.extract_sentiment(line)
+                            title_close = self.extract_titles(line)
+                            title_indice = self.find_movies_closest_to_title(str(title_close[0]))
+                            response = "Did you mean " + self.titles[title_indice[0]][0] + "?"
+                            self.creative_movie = self.titles[title_indice[0]][0]
+                            self.mid_question = True
+                            return response
+            elif (self.mid_question == True):
+                temp_list = list(line.lower().split(" "))
+                if any(item in yes for item in temp_list):
+                    if self.creative_sentiment >= 1:
+                        response = rand_pos_acknowledge + ",you " + rand_like + " \"{}\"! ".format(self.creative_movie)
+                    elif self.creative_sentiment <= -1:
+                        response = rand_neg_acknowledge + ",you " + rand_dislike + " \"{}\"! ".format(self.creative_movie)
+                    self.mid_question = False
+                    self.num_reccs += 1 
+                elif any(item in no for item in temp_list):
+                    response = "I am unable to find a title close to what you types. Can you type that again for me please?"
+                    self.mid_question = False
+                return response
 
         # if self.creative: # other creative features
         #     return "No other creative features implemented. Sorry :(("
