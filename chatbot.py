@@ -369,7 +369,7 @@ class Chatbot:
             rand_like = like[random.randint(0,len(like)-1)]
             if len(self.movies_rated) < 5 and self.num_reccs == 0:
                 if (self.mid_question == False):
-                    self.creative_sentiment = self.extract_sentiment(line)
+                    # self.creative_sentiment = self.extract_sentiment(line)
                     title_close = self.extract_titles(line)
                     title_indice = self.find_movies_closest_to_title(str(title_close[0]))
                     response = "Did you mean " + self.titles[title_indice[0]][0] + "?"
@@ -470,15 +470,25 @@ class Chatbot:
             
                     if len(self.movies_rated) < 5 and sentiment != 0:
                         response += rand_ask
-
+                
                 else: #if a movie is provided in quotes, but not in our dataset
-                    confused = ["I don't think I know", "I haven't heard of"]
-                    rand_confused = confused[random.randint(0,len(confused)-1)]
+                    title_close = self.extract_titles(line)
+                    title_indice = self.find_movies_closest_to_title(str(title_close[0]))
+                    if len(title_indice) > 0:
+                        if (self.mid_question == False):
+                            self.creative_sentiment = self.extract_sentiment(line)
+                            response = "Did you mean " + self.titles[title_indice[0]][0] + "?"
+                            self.creative_movie = self.titles[title_indice[0]][0]
+                            self.mid_question = True
+                            return response
+                    else:
+                        confused = ["I don't think I know", "I haven't heard of"]
+                        rand_confused = confused[random.randint(0,len(confused)-1)]
 
-                    asking_for_another = ["sorry...Tell me about another movie you liked.", "how about you tell me about another movie? "]
-                    rand_asking_for_another = asking_for_another[random.randint(0,len(asking_for_another)-1)]
+                        asking_for_another = ["sorry...Tell me about another movie you liked.", "how about you tell me about another movie? "]
+                        rand_asking_for_another = asking_for_another[random.randint(0,len(asking_for_another)-1)]
 
-                    response = rand_confused +  " \"{}\", ".format(title)  + rand_asking_for_another
+                        response = rand_confused +  " \"{}\", ".format(title)  + rand_asking_for_another
 
             elif len(titles) > 1: #if more than 1 movie was mentioned
                 if not self.creative:
